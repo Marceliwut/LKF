@@ -10,7 +10,9 @@ import shutil
 from datetime import datetime
 
 # Define the path for the CSV file
-CSV_FILE_PATH = "data.csv"
+from django.conf import settings
+
+CSV_FILE_PATH = os.path.join(settings.MEDIA_ROOT, 'data.csv')
 
 def index(request):
     csv_data = load_csv_from_file()
@@ -182,7 +184,7 @@ def update_entry(request):
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 
 
-
+BACKUP_DIR = os.path.join(settings.MEDIA_ROOT, 'backups')
 def backup_csv(request):
     if request.method == "POST":
         try:
