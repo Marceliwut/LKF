@@ -412,20 +412,15 @@ def parse_duration(duration):
         minutes = int(match.group(2)) if match.group(2) else 0
         return hours * 60 + minutes
     return 0  # Return 0 if the format is invalid
-
 @csrf_exempt
 def find_next_shortest_movie(request):
-    """Find the movie that, when summed with the next in line movie's duration, is closest to 4.5 hours."""
     try:
-        print("Request received at find_next_shortest_movie endpoint.")
         if request.method != "POST":
-            print("Invalid request method:", request.method)
             return JsonResponse({"status": "error", "message": "Invalid request method."})
 
         # Load the CSV file
         csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
         if not os.path.exists(csv_file_path):
-            print("CSV file not found at:", csv_file_path)
             return JsonResponse({"status": "error", "message": "CSV file not found."})
 
         with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
@@ -433,46 +428,42 @@ def find_next_shortest_movie(request):
             rows = list(reader)
 
         if len(rows) <= 1:
-            print("No movies available in the CSV file.")
             return JsonResponse({"status": "error", "message": "No movies available."})
 
         # Exclude watched or skipped movies
         header, data = rows[0], rows[1:]
         unwatched_movies = [row for row in data if len(row) > 9 and row[9] != 'TRUE' and row[10] != 'TRUE']
-        print("Unwatched movies count:", len(unwatched_movies))
 
         if not unwatched_movies:
-            print("No unwatched movies available.")
             return JsonResponse({"status": "error", "message": "No unwatched movies available."})
 
         # Get the currently displayed shortest movie ID from the request
         current_shortest_id = json.loads(request.body).get("current_shortest_id")
-        print("Current shortest ID received:", current_shortest_id)
 
         # Exclude the currently displayed shortest movie
         if current_shortest_id:
             unwatched_movies = [row for row in unwatched_movies if row[0] != current_shortest_id]
-            print("Movies after excluding current shortest:", len(unwatched_movies))
 
         if not unwatched_movies:
-            print("No other unwatched movies available.")
             return JsonResponse({"status": "error", "message": "No other unwatched movies available."})
 
         # Find the next in line movie (highest ID)
         next_in_line_movie = max(unwatched_movies, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
-        print("Next in line movie:", next_in_line_movie)
 
         # Target duration is 4.5 hours (270 minutes)
         target_duration = 270
         next_in_line_duration = parse_duration(next_in_line_movie[3])
-        print("Next in line duration (minutes):", next_in_line_duration)
 
         # Find the movie that, when summed with the next in line movie, is closest to 270 minutes
         best_match = min(
             unwatched_movies,
             key=lambda x: abs((parse_duration(x[3]) + next_in_line_duration) - target_duration)
         )
-        print("Best match movie:", best_match)
+
+        # Calculate the total duration
+        total_minutes = parse_duration(next_in_line_movie[3]) + parse_duration(best_match[3])
+        total_hours = total_minutes // 60
+        remaining_minutes = total_minutes % 60
 
         return JsonResponse({
             "status": "success",
@@ -482,9 +473,22 @@ def find_next_shortest_movie(request):
                 "year": best_match[2],
                 "duration": best_match[3],
                 "description": best_match[8],
+            },
+            "total_duration": {
+                "hours": total_hours,
+                "minutes": remaining_minutes
             }
         })
 
     except Exception as e:
-        print("Exception occurred:", str(e))
         return JsonResponse({"status": "error", "message": str(e)})
+
+
+def parse_duration(duration):
+    """Parse a duration string like '1h 48m' into total minutes."""
+    match = re.match(r'(?:(\d+)h)?\s*(?:(\d+)m)?', duration)
+    if not match:
+        return 0
+    hours = int(match.group(1) or 0)
+    minutes = int(match.group(2) or 0)
+    return hours * 60 + minutes

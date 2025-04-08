@@ -13,7 +13,7 @@
     <div class="row justify-content-center">
         {% if recommendations.latest %}
         <div class="col-md-6 mb-4">
-            <div class="card">
+            <div class="card" style="min-height: 350px">
                 <div class="card-body">
                     <h2 class="card-title">Następny w kolejności:</h2>
                     <p><strong><h4>{{ recommendations.latest.id }}. {{ recommendations.latest.title }}</h4></strong></p>
@@ -27,15 +27,19 @@
 
         {% if recommendations.shortest %}
         <div class="col-md-6 mb-4">
-            <div class="card">
+            <div class="card" style="min-height: 350px">
                 <div class="card-body">
-                    <h2 class="card-title">Najkrótszy</h2>
-                    <p><strong id="shortest-title"><h4>{{ recommendations.shortest.id }}. {{ recommendations.shortest.title }}</h4></strong></p>
-                    <p>ID: <span id="shortest-id">{{ recommendations.shortest.id }}</span></p>
+                    <h2 class="card-title">Drugi film</h2>
+                    <i id="shortest-explanation"> (najkrótszy) </i>
+                    <br><br>
+                    <h4>
+                    <strong id="shortest-title">{{ recommendations.shortest.id }}. {{ recommendations.shortest.title }}</strong>
+                    </h4>
+                    <p style="visibility:hidden;">ID: <span id="shortest-id" >{{ recommendations.shortest.id }}</span></p>
                     <p>Rok: <span id="shortest-year">{{ recommendations.shortest.year }}</span></p>
                     <p>Czas trwania: <span id="shortest-duration">{{ recommendations.shortest.duration }}</span></p>
                     <p>Opis: <span id="shortest-description">{{ recommendations.shortest.description }}</span></p>
-                    {% comment %} <button id="find-next-shortest" class="btn btn-primary mt-3">Find Another Shortest</button> {% endcomment %}
+                    <button id="find-next-shortest" class="btn mt-3">Znajdź drugi film</button>
                 </div>
             </div>
         </div>
@@ -43,11 +47,15 @@
     </div>
 
     <!-- Display Total Duration -->
-    <div class="text-center mt-4">
-        <h3>Nowy film: {{ recommendations.shortest.id }}. {{ recommendations.shortest.title }}</h3>
+    <div class="total_time_sum text-center">
         <h3>Łącznie czasowo: {{ total_hours }}h {{ total_minutes }}m</h3>
     </div>
     {% endif %}
+
+    <!-- Return Button -->
+    <div class="text-center mt-4">
+        <a href="{% url 'index' %}" class="btn btn-secondary">Wróć do listy filmów</a>
+    </div>
 </div>
 
 <script>
@@ -77,40 +85,28 @@
                 },
                 body: JSON.stringify({ current_shortest_id: currentShortestId }),
             })
-            .then(response => {
-                console.log("Response received:", response);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 console.log("Data received from server:", data);
                 if (data.status === "success") {
                     // Update the DOM with the new shortest movie details
+                    document.getElementById("shortest-explanation").textContent = "(następny w kolejności + drugi najbliżej 4.5h)"
                     document.getElementById("shortest-title").textContent = `${data.movie.id}. ${data.movie.title}`;
                     document.getElementById("shortest-id").textContent = data.movie.id;
                     document.getElementById("shortest-year").textContent = data.movie.year;
                     document.getElementById("shortest-duration").textContent = data.movie.duration;
                     document.getElementById("shortest-description").textContent = data.movie.description;
 
-                    // Update the h3 element with the new title and ID
-                    const h3Element = document.querySelector(".text-center h3");
+                    // Update "Nowy film" title
+                    const h3Element = document.querySelector(".text-center h4:first-child");
                     if (h3Element) {
                         h3Element.textContent = `Nowy film: ${data.movie.id}. ${data.movie.title}`;
                     }
 
-                    // Update the total duration dynamically
-                    const nextMovieDurationElement = document.querySelector(".col-md-6:nth-child(1) .card-body p:nth-child(3)");
-                    if (nextMovieDurationElement) {
-                        const nextMovieDuration = nextMovieDurationElement.textContent.trim();
-                        const newShortestDuration = data.movie.duration;
-
-                        const totalMinutes = calculateNewTotalMinutes(nextMovieDuration) + calculateNewTotalMinutes(newShortestDuration);
-                        const totalHours = Math.floor(totalMinutes / 60);
-                        const remainingMinutes = totalMinutes % 60;
-
-                        const totalDurationElement = document.querySelector(".text-center h3 + h3");
-                        if (totalDurationElement) {
-                            totalDurationElement.textContent = `Łącznie czasowo: ${totalHours}h ${remainingMinutes}m`;
-                        }
+                    // Update "Łącznie czasowo"
+                    const totalDurationElement = document.querySelector(".total_time_sum h3");
+                    if (totalDurationElement) {
+                        totalDurationElement.textContent = `Łącznie czasowo: ${data.total_duration.hours}h ${data.total_duration.minutes}m`;
                     }
                 } else {
                     console.error("Error from server:", data.message);
@@ -123,7 +119,6 @@
             });
         });
 
-        // Function to get the CSRF token
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie) {
@@ -137,17 +132,6 @@
                 }
             }
             return cookieValue;
-        }
-
-        // Function to calculate total minutes from a duration string
-        function calculateNewTotalMinutes(duration) {
-            const durationMatch = duration.match(/(\d+)h\s*(\d+)?m?/);
-            if (durationMatch) {
-                const hours = parseInt(durationMatch[1] || "0", 10);
-                const minutes = parseInt(durationMatch[2] || "0", 10);
-                return hours * 60 + minutes;
-            }
-            return 0;
         }
     });
 </script>
