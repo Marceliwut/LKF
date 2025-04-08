@@ -37,7 +37,7 @@ ROOT_URLCONF = 'home.urls'  # Update this if your URLs are elsewhere
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'home', 'templates')],  # Correct path to templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -49,7 +49,6 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'wsgi.application'
 
 # Database

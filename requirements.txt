@@ -10,9 +10,16 @@ django-admin-black==1.0.8
 whitenoise==6.6.0
 gunicorn==21.2.0
 
-# psycopg2-binary
-# mysqlclient
-
 # Hot Reload
 django-browser-reload==1.12.1
-requests>=2.0.0
+requests==2.32.3
+
+# Additional Dependencies
+asgiref==3.8.1
+certifi==2025.1.31
+charset-normalizer==3.4.1
+idna==3.10
+packaging==24.2
+sqlparse==0.5.3
+tzdata==2025.2
+urllib3==2.3.0
