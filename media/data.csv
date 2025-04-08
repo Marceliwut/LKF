@@ -4,7 +4,7 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 3,Mroczny Rycerz,2008,2h 32m,12,9,2.9M,84,Batman and allies face Joker's chaos in Gotham.,TRUE,FALSE,FALSE
 4,Lista Schindlera,1993,3h 15m,16,9,1.5M,95,Oskar Schindler's transformation during WWII in occupied Poland.,FALSE,FALSE,FALSE
 5,Władca Pierścieni: Powrót króla,2003,3h 21m,12,9,2M,94,Men battle Sauron to help Frodo and Sam destroy the One Ring.,FALSE,FALSE,FALSE
-6,Dwunastu gniewnych ludzi,1957,1h 36m,12,9,880K,97,A lone juror forces others to reevaluate evidence during a murder trial.,FALSE,FALSE,FALSE
+6,Dwunastu gniewnych ludzi,1957,1h 36m,12,9,880K,97,A lone juror forces others to reevaluate evidence during a murder trial.,TRUE,FALSE,FALSE
 7,Ojciec chrzestny II,1974,3h 22m,15,9,1.4M,90,Continuation of Corleone family's saga.,FALSE,FALSE,FALSE
 8,Pulp Fiction,1994,2h 34m,15,8.9,2.3M,95,Intertwining tales of mobsters and redemption.,FALSE,FALSE,FALSE
 9,Władca Pierścieni: Drużyna Pierścienia,2001,2h 58m,12,8.9,2M,92,A Hobbit and companions journey to save Middle-earth by destroying the One Ring.,FALSE,FALSE,FALSE
@@ -12,7 +12,7 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 11,Incepcja,2010,2h 28m,12,8.8,2.6M,74,A thief uses dream-sharing technology to plant an idea in a CEO’s mind.,FALSE,FALSE,FALSE
 12,Podziemny krąg,1999,2h 19m,18,8.8,2.4M,67,An insomniac office worker and a soap maker form an underground fight club.,FALSE,FALSE,FALSE
 13,Forrest Gump,1994,2h 22m,15,8.8,2.3M,82,A man's extraordinary life shaped by historic events and love for his childhood sweetheart.,FALSE,FALSE,FALSE
-14,Dobry, zły i brzydki,1966,2h 41m,16,8.8,821K,90,FALSE,FALSE,FALSE
+14,Dobry zły i brzydki,1966,2h 41m,16,8.8,821K,90,FALSE,FALSE,FALSE
 15,Władca Pierścieni: Dwie wieże,2002,2h 59m,12,8.8,1.8M,87,Frodo and Sam journey toward Mordor as allies battle Saruman’s forces.,FALSE,FALSE,FALSE
 16,Interstellar,2014,2h 49m,12,8.7,2.1M,74,A team of researchers searches for a new habitable planet for humans.,FALSE,FALSE,FALSE
 17,Chłopcy z ferajny,1990,2h 25m,16,8.7,1.3M,92,The life of a mob associate from youth to adulthood.,FALSE,FALSE,FALSE

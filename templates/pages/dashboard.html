@@ -28,11 +28,11 @@
                                 field === "watched" ? "p:nth-of-type(1) span" : "p:nth-of-type(2) span"
                             );
                             if (statusSpan) {
-                                if (statusSpan.textContent === "Yes") {
-                                    statusSpan.textContent = "No";
+                                if (statusSpan.textContent === "Tak") {
+                                    statusSpan.textContent = "Nie";
                                     statusSpan.className = "text-danger";
                                 } else {
-                                    statusSpan.textContent = "Yes";
+                                    statusSpan.textContent = "Tak";
                                     statusSpan.className = "text-success";
                                 }
                             }
@@ -87,30 +87,30 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            showNotification(data.message, 'success');
-                            setTimeout(() => window.location.reload(), 1500); // Refresh after showing notification
+                            showNietification(data.message, 'success');
+                            setTimeout(() => window.location.reload(), 1500); // Refresh after showing Nietification
                         } else {
-                            showNotification(data.message, 'danger');
+                            showNietification(data.message, 'danger');
                         }
                     })
                     .catch(error => {
-                        showNotification('Something went wrong!', 'danger');
+                        showNietification('Something went wrong!', 'danger');
                         console.error('Error:', error);
                     });
                 });
             });
         });
     
-        // Function to dynamically show notifications
-        function showNotification(message, type) {
-            const notificationArea = document.getElementById('notification-area');
-            notificationArea.textContent = message;
-            notificationArea.className = `alert alert-${type} text-center`;
-            notificationArea.classList.remove('d-none');
+        // Function to dynamically show Nietifications
+        function showNietification(message, type) {
+            const NietificationArea = document.getElementById('Nietification-area');
+            NietificationArea.textContent = message;
+            NietificationArea.className = `alert alert-${type} text-center`;
+            NietificationArea.classList.remove('d-Niene');
     
-            // Automatically hide the notification after 3 seconds
+            // Automatically hide the Nietification after 3 seconds
             setTimeout(() => {
-                notificationArea.classList.add('d-none');
+                NietificationArea.classList.add('d-Niene');
             }, 3000);
         }
     
@@ -135,12 +135,12 @@
    <div style = "margin-top: 20px;">
     <h1 class="display-1 text-primary text-center fw-bold">Lemorkowy Klub Filmowy</h1>
     </div>
-    <!-- Notification Area -->
-    <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
+    <!-- Nietification Area -->
+    <div id="Nietification-area" class="alert text-center d-Niene" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
 
     <!-- Filter Buttons -->
     <div class="btn-group d-flex justify-content-center mb-3" role="group">
-        <a href="{% url 'index' %}?filter=not_watched" class="btn filters btn-filters mx-1 {% if request.GET.filter == 'not_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
+        <a href="{% url 'index' %}?filter=Niet_watched" class="btn filters btn-filters mx-1 {% if request.GET.filter == 'Niet_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
 
         <a href="{% url 'index' %}?filter=watched" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">Oglądnięte</a>
         <a href="{% url 'index' %}?filter=skipped" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">Skipped</a>
@@ -158,37 +158,32 @@
         </a>
     </div>
 
-        <!-- Notification Area -->
-        <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
+        <!-- Nietification Area -->
+        <div id="Nietification-area" class="alert text-center d-Niene" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
         <!-- Filter Header -->
-        <div class="row mt-3">
-            <div class="col-12 text-center">
-                <h2>
-                    {% if request.GET.filter == 'watched' %} <span class="text-success">Oglądnięte</span> {% elif request.GET.filter == 'skipped' %} <span class="text-danger">Skipped</span> {% else %}
-                    <span class="text-info">Do oglądnięcia</span> {% endif %}
-                </h2>
-            </div>
-        </div>
-<!-- Statistics Section -->
+         <!-- Statistics Section -->
 <div class="row mt-3">
     <div class="col-12 text-center">
-        <p class="lead">
-            <strong>Stats:</strong> 
-            <br>
-            Oglądnięte: <span class="text-success">{{ watched_count }}</span>, 
-            Skipped: <span class="text-danger">{{ skipped_count }}</span>, 
-            Pozostało: <span class="text-info">{{ unwatched_count }}</span>
 
+        <h2 class="btn"><a href="{% url 'recommend_next_watch' %}">Rekomendacja na kolejne spotkanie</a></h2>
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <h3>
+                    {% if request.GET.filter == 'watched' %} <span class="text-success">Oglądnięte</span> {% elif request.GET.filter == 'skipped' %} <span class="text-danger">Skipped</span> {% else %}
+                    <span class="text-info">Do oglądnięcia</span> {% endif %}
+                </h3>
+            </div>
+        </div>
 
 <!-- Search Bar -->
 <div class="row mt-3">
     <div class="col-12 text-center">
         <form method="get" action="{% url 'index' %}">
             <div class="input-group mb-3" style="max-width: 500px; margin: 0 auto;">
-                <input type="text" name="search" class="form-control" placeholder="Search by title..." value="{{ search_query }}">
+                <input type="text" name="search" class="form-control" placeholder="Szukaj po tytule" value="{{ search_query }}">
                 <input type="hidden" name="filter" value="{{ request.GET.filter }}">
                 <input type="hidden" name="sort" value="{{ request.GET.sort }}">
-                <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Search</button>
+                <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Szukaj</button>
             </div>
         </form>
     </div>
@@ -206,11 +201,11 @@
                                     <div class="col-md-6 text-left">
                                         <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
                                         <!-- LP Number and Movie Title -->
-                                        <h3 class="card-category">Year: {{ row.2 }}</h3>
-                                        <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                                        <h3 class="card-category">Rok: {{ row.2 }}</h3>
+                                        <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
                                         <p>{{ row.8 }}</p>
-                                        <p>Oglądnięte: <span class="text-success">Yes</span></p>
-                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <p>Oglądnięte: <span class="text-success">Tak</span></p>
+                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Tak</span> {% else %} <span class="text-danger">Nie</span> {% endif %}</p>
                                         <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
                                         <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                                     </div>
@@ -232,11 +227,11 @@
                                     <div class="col-md-6 text-left">
                                         <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
                                         <!-- LP Number and Movie Title -->
-                                        <h3 class="card-category">Year: {{ row.2 }}</h3>
-                                        <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                                        <h3 class="card-category">Rok: {{ row.2 }}</h3>
+                                        <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
                                         <p>{{ row.8 }}</p>
-                                        <p>Oglądnięte: {% if row.9 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
-                                        <p>Skipnięte: <span class="text-success">Yes</span></p>
+                                        <p>Oglądnięte: {% if row.9 == 'TRUE' %} <span class="text-success">Tak</span> {% else %} <span class="text-danger">Nie</span> {% endif %}</p>
+                                        <p>Skipnięte: <span class="text-success">Tak</span></p>
                                         <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
                                         <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                                     </div>
@@ -259,11 +254,11 @@
                                     <div class="col-md-6 text-left">
                                         <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
                                         <!-- LP Number and Movie Title -->
-                                        <h3 class="card-category">Year: {{ row.2 }}</h3>
-                                        <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                                        <h3 class="card-category">Rok: {{ row.2 }}</h3>
+                                        <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
                                         <p>{{ row.8 }}</p>
-                                        <p>Oglądnięte: <span class="text-danger">No</span></p>
-                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <p>Oglądnięte: <span class="text-danger">Nie</span></p>
+                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Tak</span> {% else %} <span class="text-danger">Nie</span> {% endif %}</p>
                                         <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
                                         <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                                     </div>

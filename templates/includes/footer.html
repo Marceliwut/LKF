@@ -1,7 +1,16 @@
 <!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\includes\footer.html -->
 <footer class="footer">
+ 
+        <p class="lead">
+            <strong>Stats:</strong> 
+            <br>
+            Oglądnięte: <span class="text-success">{{ watched_count }}</span>, 
+            Skipped: <span class="text-danger">{{ skipped_count }}</span>, 
+            Pozostało: <span class="text-info">{{ unwatched_count }}</span>
+        </p>
+
     <p>
-        <a href="file_explorer/">Manage and restore backups here</a>
+        <a href="file_explorer/">Zarządzanie backupami tutaj</a>
     </p>
     <!-- Re-download Button -->
 
@@ -48,14 +57,15 @@
         color: white;
         border: none;
         border-radius: 50%;
-        width: 50px;
-        height: 50px;
+        width: 30px;
+        height: 30px;
         display: flex;
         justify-content: center;
         align-items: center;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         cursor: pointer;
         z-index: 1000;
+        transparency: 0.8;
     }
 
     .scroll-to-bottom-btn:hover {
@@ -69,20 +79,21 @@
     /* Scroll to Top Button Styles */
     .scroll-to-top-btn {
         position: fixed;
-        bottom: 80px; /* Place it above the bottom button */
+        bottom: 55px; /* Adjusted to make it closer to the bottom button */
         right: 20px;
         background-color: #28a745;
         color: white;
         border: none;
         border-radius: 50%;
-        width: 50px;
-        height: 50px;
+        width: 30px;
+        height: 30px;
         display: flex;
         justify-content: center;
         align-items: center;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         cursor: pointer;
         z-index: 1000;
+        transparency: 0.8;
     }
 
     .scroll-to-top-btn:hover {

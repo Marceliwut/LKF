@@ -1,0 +1,47 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Na kolejne spotkanie:</h1>
+    <hr>
+
+    <!-- Back Button -->
+
+
+    {% if error %}
+        <div class="alert alert-danger">
+            <strong>Error:</strong> {{ error }}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Najnowszy film do oglądnięcia:</h3>
+                {% if recommendations.latest %}
+                    <p><strong>{{ recommendations.latest.0 }}. {{ recommendations.latest.1 }}</strong></p>
+                    <p>Rok: {{ recommendations.latest.2 }}</p>
+                    <p>Czas trwania: {{ recommendations.latest.3 }}</p>
+                    <p>Opis: {{ recommendations.latest.8 }}</p>
+                {% else %}
+                    <p>Nie ma już nic do oglądnięcia.</p>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <h3>Najkrótszy film do oglądniecia</h3>
+                {% if recommendations.shortest %}
+                    <p><strong>{{ recommendations.shortest.0 }}. {{ recommendations.shortest.1 }}</strong></p>
+                    <p>Rok: {{ recommendations.shortest.2 }}</p>
+                    <p>Czas trwania: {{ recommendations.shortest.3 }}</p>
+                    <p>Opis: {{ recommendations.shortest.8 }}</p>
+                {% else %}
+                    <p>Brak.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="mb-3">
+        <a href="{% url 'index' %}" class="btn btn-secondary">
+            <i class="fa fa-arrow-left"></i> Wróc do listy
+        </a>
+    </div>
+</div>
+{% endblock %}

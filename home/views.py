@@ -8,6 +8,9 @@ from django.http import JsonResponse
 import json
 import shutil
 from datetime import datetime
+from django.shortcuts import render
+from django.conf import settings
+import re
 
 # Define the path for the CSV file
 from django.conf import settings
@@ -273,3 +276,60 @@ def restore_backup(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
     return JsonResponse({"status": "error", "message": "Invalid request method."})
+
+
+def parse_duration(duration):
+    """Parse duration in the format 'Xh XXminutes' and return total minutes."""
+    match = re.match(r'(?:(\d+)h)?\s*(?:(\d+)minutes)?', duration)
+    if match:
+        hours = int(match.group(1)) if match.group(1) else 0
+        minutes = int(match.group(2)) if match.group(2) else 0
+        return hours * 60 + minutes
+    return float('inf')  # Return a very large value if the format is invalid
+
+def recommend_next_watch(request):
+    """Recommend the next movie to watch."""
+    csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+    recommendations = {"latest": None, "shortest": None}
+
+    try:
+        # Load the CSV file
+        with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            rows = list(reader)
+
+            if len(rows) > 1:  # Ensure there are rows beyond the header
+                header, data = rows[0], rows[1:]
+
+                # Filter movies that are not watched and not skipped
+                not_watched = [
+                    row for row in data
+                    if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE'
+                ]
+
+                if not_watched:
+                    # Find the latest movie (highest number)
+                    recommendations["latest"] = max(
+                        not_watched, key=lambda x: int(x[0]) if x[0].isdigit() else 0
+                    )
+
+                    # Exclude the latest movie from the shortest movie calculation
+                    not_watched_excluding_latest = [
+                        row for row in not_watched if row != recommendations["latest"]
+                    ]
+
+                    # Find the shortest movie (minimum duration)
+                    if not_watched_excluding_latest:
+                        recommendations["shortest"] = min(
+                            not_watched_excluding_latest,
+                            key=lambda x: parse_duration(x[3]) if len(x) > 3 else float('inf')
+                        )
+    except Exception as e:
+        return render(request, 'pages/recommend_next_watch.html', {
+            "error": str(e),
+            "recommendations": recommendations,
+        })
+
+    return render(request, 'pages/recommend_next_watch.html', {
+        "recommendations": recommendations,
+    })
