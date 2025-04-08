@@ -47,6 +47,58 @@
     });
 </script>
 
+<div class="text-center mb-4">
+    <button id="update-posters-btn" class="btn btn-warning">
+        <i class="fa fa-refresh"></i> Force Update Posters
+    </button>
+</div>
+
+<script>
+    document.getElementById("update-posters-btn").addEventListener("click", function () {
+        const tmdbApiKey = prompt("Please enter your TMDb API key:");
+        if (!tmdbApiKey) {
+            alert("TMDb API key is required to update posters.");
+            return;
+        }
+
+        fetch("{% url 'update_posters' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ tmdb_api_key: tmdbApiKey }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.status === "success") {
+                location.reload(); // Reload the page to reflect changes
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating posters.");
+        });
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
 <style>
     /* Scroll to Bottom Button Styles */
     .scroll-to-bottom-btn {

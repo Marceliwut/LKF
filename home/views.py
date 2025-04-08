@@ -18,60 +18,131 @@ CSV_FILE_PATH = os.path.join(settings.MEDIA_ROOT, 'data.csv')
 BACKUP_DIR = os.path.join(settings.MEDIA_ROOT, 'backups')
 
 
+
+# Run the script
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def update_posters(request):
+    """Update poster URLs in the CSV file using a user-provided TMDb API key."""
+    if request.method == "POST":
+        try:
+            # Get the TMDb API key from the POST request
+            data = json.loads(request.body)
+            tmdb_api_key = data.get("tmdb_api_key")
+
+            if not tmdb_api_key:
+                return JsonResponse({"status": "error", "message": "TMDb API key is required."})
+
+            # Update the poster URLs in the CSV file
+            updated_rows = []
+            with open(CSV_FILE_PATH, "r", encoding="utf-8") as csvfile:
+                reader = csv.reader(csvfile)
+                rows = list(reader)
+
+                if len(rows) > 0:
+                    header = rows[0]
+                    if "Poster URL" not in header:
+                        header.append("Poster URL")
+                    updated_rows.append(header)
+
+                    for row in rows[1:]:
+                        while len(row) < len(header):
+                            row.append("")
+
+                        title = row[1] if len(row) > 1 else None
+                        year = row[2] if len(row) > 2 else None
+
+                        if not row[-1] and title and year:
+                            try:
+                                response = requests.get(TMDB_BASE_URL, params={
+                                    "api_key": tmdb_api_key,
+                                    "query": title,
+                                    "year": year
+                                })
+                                if response.status_code == 200:
+                                    results = response.json().get("results", [])
+                                    if results:
+                                        poster_path = results[0].get("poster_path")
+                                        if poster_path:
+                                            row[-1] = f"https://image.tmdb.org/t/p/w500{poster_path}"
+                            except Exception as e:
+                                print(f"Error fetching poster for {title} ({year}): {e}")
+                                row[-1] = "N/A"
+
+                        updated_rows.append(row)
+
+            # Save the updated rows back to the CSV file
+            with open(CSV_FILE_PATH, "w", encoding="utf-8", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(updated_rows)
+
+            return JsonResponse({"status": "success", "message": "Poster URLs updated successfully."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+    return JsonResponse({"status": "error", "message": "Invalid request method."})
+
 def index(request):
-    csv_data = load_csv_from_file()
+    csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
     filter_by = request.GET.get('filter', 'not_watched')
     sort_by = request.GET.get('sort')
     search_query = request.GET.get('search', '').strip().lower()  # Get the search query
-
+    
     # Initialize statistics
     watched_count = skipped_count = unwatched_count = 0
     total_duration_minutes = 0
+    updated_rows = []
+    header = []  # Initialize header to avoid UnboundLocalError
 
-    if csv_data and len(csv_data) > 1:
-        header, rows = csv_data[0], csv_data[1:]
+    if os.path.exists(csv_file_path):
+        with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            rows = list(reader)
 
-        # Calculate statistics safely
-        watched_count = sum(1 for row in rows if len(row) > 9 and row[9] == 'TRUE')
-        skipped_count = sum(1 for row in rows if len(row) > 10 and row[10] == 'TRUE')
-        unwatched_count = sum(1 for row in rows if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE')
+            if len(rows) > 1:  # Ensure there are rows beyond the header
+                header, data = rows[0], rows[1:]
 
-        # Calculate total duration in minutes
-        total_duration_minutes = sum(
-            int(row[3]) for row in rows if len(row) > 3 and row[3].isdigit()
-        )
+                # Update statistics
+                watched_count = sum(1 for row in data if len(row) > 9 and row[9] == 'TRUE')
+                skipped_count = sum(1 for row in data if len(row) > 10 and row[10] == 'TRUE')
+                unwatched_count = sum(1 for row in data if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE')
+                total_duration_minutes = sum(
+                    parse_duration(row[3]) for row in data if len(row) > 3
+                )
 
-        display_rows = rows
+                # Apply filters
+                if filter_by == 'watched':
+                    updated_rows = [row for row in data if len(row) > 9 and row[9] == 'TRUE']
+                elif filter_by == 'skipped':
+                    updated_rows = [row for row in data if len(row) > 10 and row[10] == 'TRUE']
+                elif filter_by == 'not_watched':
+                    updated_rows = [row for row in data if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE']
+                else:
+                    updated_rows = data
 
-        # Apply filters
-        if filter_by == 'watched':
-            display_rows = [row for row in rows if len(row) > 9 and row[9] == 'TRUE']
-        elif filter_by == 'skipped':
-            display_rows = [row for row in rows if len(row) > 10 and row[10] == 'TRUE']
-        elif filter_by == 'not_watched':
-            display_rows = [row for row in rows if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE']
+                # Apply search filter
+                if search_query:
+                    updated_rows = [row for row in updated_rows if search_query in row[1].lower()]
 
-        # Apply search filter
-        if search_query:
-            display_rows = [row for row in display_rows if search_query in row[1].lower()]
+                # Apply sorting
+                if not sort_by:
+                    sort_by = 'desc' if filter_by == 'not_watched' else 'asc'
 
-        # Apply sorting
-        if not sort_by:
-            sort_by = 'desc' if filter_by == 'not_watched' else 'asc'
-
-        if sort_by == 'asc':
-            display_rows = sorted(display_rows, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
-        elif sort_by == 'desc':
-            display_rows = sorted(display_rows, key=lambda x: int(x[0]) if x[0].isdigit() else 0, reverse=True)
-
-        csv_data = [header] + display_rows
+                if sort_by == 'asc':
+                    updated_rows = sorted(updated_rows, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
+                elif sort_by == 'desc':
+                    updated_rows = sorted(updated_rows, key=lambda x: int(x[0]) if x[0].isdigit() else 0, reverse=True)
+            else:
+                # If the CSV file is empty or invalid, initialize header and updated_rows
+                header = ["Number", "Title", "Year", "Duration", "Age Rating", "Rating", "Votes", "Metascore", "Description", "Watched", "Skipped", "Series", "Poster URL"]
+                updated_rows = []
 
     # Convert total duration to hours
     total_duration_hours = total_duration_minutes // 60
     total_duration_minutes_remainder = total_duration_minutes % 60
 
     return render(request, 'pages/dashboard.html', {
-        'csv_data': csv_data,
+        'csv_data': [header] + updated_rows,
         'watched_count': watched_count,
         'skipped_count': skipped_count,
         'unwatched_count': unwatched_count,
@@ -79,10 +150,6 @@ def index(request):
         'total_duration_minutes_remainder': total_duration_minutes_remainder,
         'search_query': search_query,  # Pass the search query to the template
     })
-
-
-
-
 
 def refresh_csv_data(request):
     try:

@@ -1,3 +1,4 @@
+<!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\pages\dashboard.html -->
 {% extends 'layouts/base.html' %}
 {% load static %}
 {% block content %}
@@ -66,74 +67,10 @@
         }
     });
 </script>
-<script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const updateButtons = document.querySelectorAll('.update-btn');
-    
-            updateButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const entryId = button.getAttribute('data-id');
-                    const entryTitle = button.getAttribute('data-title');
-                    const field = button.getAttribute('data-field');
-    
-                    fetch('/update-entry/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({ id: entryId, title: entryTitle, field: field })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showNotification(data.message, 'success');
-                            setTimeout(() => window.location.reload(), 1500); // Refresh after showing notification
-                        } else {
-                            showNotification(data.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        showNotification('Something went wrong!', 'danger');
-                        console.error('Error:', error);
-                    });
-                });
-            });
-        });
-    
-        // Function to dynamically show notifications
-        function showNotification(message, type) {
-            const notificationArea = document.getElementById('notification-area');
-            notificationArea.textContent = message;
-            notificationArea.className = `alert alert-${type} text-center`;
-            notificationArea.classList.remove('d-none');
-    
-            // Automatically hide the notification after 3 seconds
-            setTimeout(() => {
-                notificationArea.classList.add('d-none');
-            }, 3000);
-        }
-    
-        // Function to retrieve CSRF token from cookies
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    </script>
 
 <div class="content">
-   <div style = "margin-top: 20px;">
-    <h1 class="display-1 text-primary text-center fw-bold">Lemorkowy Klub Filmowy</h1>
+    <div style="margin-top: 20px;">
+        <h1 class="display-1 text-primary text-center fw-bold">Lemorkowy Klub Filmowy</h1>
     </div>
     <!-- Notification Area -->
     <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
@@ -141,7 +78,6 @@
     <!-- Filter Buttons -->
     <div class="btn-group d-flex justify-content-center mb-3" role="group">
         <a href="{% url 'index' %}?filter=not_watched" class="btn filters btn-filters mx-1 {% if request.GET.filter == 'not_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
-
         <a href="{% url 'index' %}?filter=watched" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">Oglądnięte</a>
         <a href="{% url 'index' %}?filter=skipped" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">Skipped</a>
     </div>
@@ -158,123 +94,55 @@
         </a>
     </div>
 
-        <!-- Notification Area -->
-        <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
-        <!-- Filter Header -->
-         <!-- Statistics Section -->
-<div class="row mt-3">
-    <div class="col-12 text-center">
+    <!-- Search Bar -->
+    <div class="row mt-3">
+        <div class="col-12 text-center">
+            <form method="get" action="{% url 'index' %}">
+                <div class="input-group mb-3" style="max-width: 500px; margin: 0 auto;">
+                    <input type="text" name="search" class="form-control" placeholder="Szukaj po tytule" value="{{ search_query }}">
+                    <input type="hidden" name="filter" value="{{ request.GET.filter }}">
+                    <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+                    <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Szukaj</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        <h2 class="btn"><a href="{% url 'recommend_next_watch' %}">Rekomendacja na kolejne spotkanie</a></h2>
-        <div class="row mt-3">
-            <div class="col-12 text-center">
-                <h3>
-                    {% if request.GET.filter == 'watched' %} <span class="text-success">Oglądnięte</span> {% elif request.GET.filter == 'skipped' %} <span class="text-danger">Skipped</span> {% else %}
-                    <span class="text-info">Do oglądnięcia</span> {% endif %}
-                </h3>
+    <!-- Filtered Movie Cards -->
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                {% for row in csv_data|slice:"1:" %}
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="row g-0">
+                            <!-- Movie Poster -->
+                            <div class="col-md-4">
+                                {% if row|length > 12 and row.12 %}
+                                <img src="{{ row.12 }}" class="img-poster rounded-start" style="max-height: 400px;" alt="{{ row.1 }}">
+                                {% else %}
+                                <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available">
+                                {% endif %}
+                            </div>
+                            <!-- Movie Details -->
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
+                                    <h3 class="card-category">Rok: {{ row.2 }}</h3>
+                                    <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
+                                    <p>{{ row.8 }}</p>
+                                    <p>Oglądnięte: <span class="text-success">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                                    <p>Skipnięte: <span class="text-danger">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                                    <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                                    <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
-
-<!-- Search Bar -->
-<div class="row mt-3">
-    <div class="col-12 text-center">
-        <form method="get" action="{% url 'index' %}">
-            <div class="input-group mb-3" style="max-width: 500px; margin: 0 auto;">
-                <input type="text" name="search" class="form-control" placeholder="Szukaj po tytule" value="{{ search_query }}">
-                <input type="hidden" name="filter" value="{{ request.GET.filter }}">
-                <input type="hidden" name="sort" value="{{ request.GET.sort }}">
-                <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Szukaj</button>
-            </div>
-        </form>
     </div>
 </div>
-        <!-- Filtered Movie Cards -->
-        <div class="row">
-            <div class="col-12">
-                <div class="row">
-                    {% for row in csv_data|slice:"1:" %} {% if request.GET.filter == 'watched' and row.9 == 'TRUE' %}
-                    <!-- Show Watched Entries -->
-                    <div class="col-12 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="row">
-                                    <div class="col-md-6 text-left">
-                                        <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
-                                        <!-- LP Number and Movie Title -->
-                                        <h3 class="card-category">Rok: {{ row.2 }}</h3>
-                                        <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
-                                        <p>{{ row.8 }}</p>
-                                        <p>Oglądnięte: <span class="text-success">Tak</span></p>
-                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Tak</span> {% else %} <span class="text-danger"> </span> {% endif %}</p>
-                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
-                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
-                                    </div>
-                                    <div class="col-md-6 text-right">
-                                        <p>Rating: {{ row.5 }}</p>
-                                        <p>Votes: {{ row.6 }}</p>
-                                        <p>Age Rating: {{ row.4 }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% elif request.GET.filter == 'skipped' and row.10 == 'TRUE' %}
-                    <!-- Show Skipped Entries -->
-                    <div class="col-12 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="row">
-                                    <div class="col-md-6 text-left">
-                                        <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
-                                        <!-- LP Number and Movie Title -->
-                                        <h3 class="card-category">Rok: {{ row.2 }}</h3>
-                                        <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
-                                        <p>{{ row.8 }}</p>
-                                        <p>Oglądnięte: {% if row.9 == 'TRUE' %} <span class="text-success">Tak</span> {% else %} <span class="text-danger">Nie</span> {% endif %}</p>
-                                        <p>Skipnięte: <span class="text-success">Tak</span></p>
-                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
-                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
-                                    </div>
-                                    <div class="col-md-6 text-right">
-                                        <p>Rating: {{ row.5 }}</p>
-                                        <p>Votes: {{ row.6 }}</p>
-                                        <p>Age Rating: {{ row.4 }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <!-- Default View: Show All Unwatched Entries -->
-                    {% if row.9 != 'TRUE' %}
-                    <div class="col-12 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="row">
-                                    <div class="col-md-6 text-left">
-                                        <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
-                                        <!-- LP Number and Movie Title -->
-                                        <h3 class="card-category">Rok: {{ row.2 }}</h3>
-                                        <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
-                                        <p>{{ row.8 }}</p>
-                                        <p>Oglądnięte: <span class="text-danger">Nie</span></p>
-                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Tak</span> {% else %} <span class="text-danger">Nie</span> {% endif %}</p>
-                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
-                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
-                                    </div>
-                                    <div class="col-md-6 text-right">
-                                        <p>Rating: {{ row.5 }}</p>
-                                        <p>Votes: {{ row.6 }}</p>
-                                        <p>Age Rating: {{ row.4 }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %} {% endif %} {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endblock content %}
-    
+{% endblock %}

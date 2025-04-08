@@ -59,9 +59,7 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 58,Avengers: Koniec gry,2019,3h 1m,12,8.4,1.3M,78,The Avengers assemble to undo Thanos' actions and restore balance.,FALSE,FALSE,FALSE
 59,Bękarty wojny,2009,2h 33m,18,8.4,1.6M,69,Jewish U.S. soldiers and a theater owner plan to assassinate Nazi leaders.,FALSE,FALSE,FALSE
 60,Joker,2019,2h 2m,18,8.4,1.5M,59,Arthur Fleck descends into crime and chaos as the Joker.,FALSE,FALSE,FALSE
-61,Avengers: Wojna bez granic,2018,2h 29m,
-1
-6,8.4,1.2M,68,The Avengers fight to stop Thanos from destroying the universe.,FALSE,FALSE,FALSE
+61,Avengers: Wojna bez granic,2018,2h 29m,16,8.4,1.2M,68,The Avengers fight to stop Thanos from destroying the universe.,FALSE,FALSE,FALSE
 62,Lśnienie,1980,2h 26m,18,8.4,1.1M,68,A sinister presence affects a family in an isolated hotel.,FALSE,FALSE,FALSE
 63,Mroczny Rycerz powstaje,2012,2h 44m,16,8.4,1.9M,78,Bruce Wayne returns as Batman to stop Bane's attacks on Gotham.,TRUE,FALSE,FALSE
 64,Czas Apokalipsy,1979,2h 27m,16,8.4,718K,94,An officer is tasked with assassinating a renegade colonel in Vietnam.,FALSE,FALSE,FALSE
@@ -101,6 +99,3 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 98,Deszczowa piosenka,1952,1h 43m,12,8.3,264K,99,A silent film star transitions to talkies while falling for a chorus girl.,TRUE,FALSE,FALSE
 99,Garsoniera,1960,2h 5m,-,8.3,200K,94,"An insurance clerk lets executives use his apartment, complicating his ambitions.",TRUE,TRUE,FALSE
 100,Piętno śmierci,1952,2h 23m,12,-,-,-,A tragic story whose details were not provided in the context.,TRUE,FALSE,FALSE
-
-
-
