@@ -1,16 +1,13 @@
-<!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\pages\dashboard.html -->
 {% extends 'layouts/base.html' %}
 {% load static %}
 {% block content %}
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".update-btn").forEach(button => {
             button.addEventListener("click", function () {
-                const title = this.getAttribute("data-title"); // Get the movie title
+                const title = this.getAttribute("data-title");
                 const field = this.getAttribute("data-field");
-                const button = this; // Reference to the clicked button
-
-                // Disable the button to prevent multiple clicks
                 button.disabled = true;
 
                 fetch("update_entry/", {
@@ -21,43 +18,36 @@
                     },
                     body: JSON.stringify({ title: title, field: field }),
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === "success") {
-                            // Update the UI dynamically
-                            const statusSpan = button.parentElement.querySelector(
-                                field === "watched" ? "p:nth-of-type(1) span" : "p:nth-of-type(2) span"
-                            );
-                            if (statusSpan) {
-                                if (statusSpan.textContent === "Tak") {
-                                    statusSpan.textContent = "Nie";
-                                    statusSpan.className = "text-danger";
-                                } else {
-                                    statusSpan.textContent = "Tak";
-                                    statusSpan.className = "text-success";
-                                }
-                            }
-                            alert(data.message);
-                        } else {
-                            alert(`Error: ${data.message}`);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        const statusSpan = button.parentElement.querySelector(
+                            field === "watched" ? "p:nth-of-type(1) span" : "p:nth-of-type(2) span"
+                        );
+                        if (statusSpan) {
+                            statusSpan.textContent = statusSpan.textContent === "Tak" ? "Nie" : "Tak";
+                            statusSpan.className = statusSpan.textContent === "Tak" ? "text-success" : "text-danger";
                         }
-                        button.disabled = false; // Re-enable the button
-                    })
-                    .catch(error => {
-                        console.error("Error:", error);
-                        button.disabled = false; // Re-enable the button if there was an error
-                    });
+                        alert(data.message);
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                    button.disabled = false;
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    button.disabled = false;
+                });
             });
         });
 
-        // Helper function to get CSRF token
         function getCookie(name) {
             let cookieValue = null;
-            if (document.cookie && document.cookie !== "") {
+            if (document.cookie) {
                 const cookies = document.cookie.split(";");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === name + "=") {
+                for (let cookie of cookies) {
+                    cookie = cookie.trim();
+                    if (cookie.startsWith(name + "=")) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                         break;
                     }
@@ -69,80 +59,59 @@
 </script>
 
 <div class="content">
-    <div style="margin-top: 20px;">
-        <h1 class="display-1 text-primary text-center fw-bold">Lemorkowy Klub Filmowy</h1>
-    </div>
-    <!-- Notification Area -->
-    <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
+    <h1 class="text-center text-primary fw-bold">Lemorkowy Klub Filmowy</h1>
 
     <!-- Filter Buttons -->
-    <div class="btn-group d-flex justify-content-center mb-3" role="group">
-        <a href="{% url 'index' %}?filter=not_watched" class="btn filters btn-filters mx-1 {% if request.GET.filter == 'not_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
-        <a href="{% url 'index' %}?filter=watched" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">Oglądnięte</a>
-        <a href="{% url 'index' %}?filter=skipped" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">Skipped</a>
+    <div class="btn-group d-flex justify-content-center mb-3">
+        <a href="{% url 'index' %}?filter=not_watched" class="btn btn-info mx-1 {% if request.GET.filter == 'not_watched' %}active{% endif %}">Do oglądnięcia</a>
+        <a href="{% url 'index' %}?filter=watched" class="btn btn-info mx-1 {% if request.GET.filter == 'watched' %}active{% endif %}">Oglądnięte</a>
+        <a href="{% url 'index' %}?filter=skipped" class="btn btn-info mx-1 {% if request.GET.filter == 'skipped' %}active{% endif %}">Skipped</a>
     </div>
 
-    <!-- Sorting Arrows -->
-    <div class="row mt-2 mb-3 justify-content-center">
-        <a href="{% url 'index' %}?sort=asc{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
-           class="btn btn-outline-primary mx-1 {% if request.GET.sort == 'asc' %}active{% endif %}">
-            <i class="fa fa-arrow-up"></i>
-        </a>
-        <a href="{% url 'index' %}?sort=desc{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
-           class="btn btn-outline-primary mx-1 {% if request.GET.sort == 'desc' %}active{% endif %}">
-            <i class="fa fa-arrow-down"></i>
-        </a>
+    <!-- Recommendation Button -->
+    <div class="text-center mb-3">
+        <a href="{% url 'recommend_next_watch' %}" class="btn btn-primary">Get Recommendation</a>
     </div>
-
     <!-- Search Bar -->
-    <div class="row mt-3">
-        <div class="col-12 text-center">
-            <form method="get" action="{% url 'index' %}">
-                <div class="input-group mb-3" style="max-width: 500px; margin: 0 auto;">
-                    <input type="text" name="search" class="form-control" placeholder="Szukaj po tytule" value="{{ search_query }}">
-                    <input type="hidden" name="filter" value="{{ request.GET.filter }}">
-                    <input type="hidden" name="sort" value="{{ request.GET.sort }}">
-                    <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Szukaj</button>
-                </div>
-            </form>
+    <form method="get" action="{% url 'index' %}" class="text-center mb-3">
+        <div class="input-group" style="max-width: 500px; margin: 0 auto;">
+            <input type="text" name="search" class="form-control" placeholder="Szukaj po tytule" value="{{ search_query }}">
+            <input type="hidden" name="filter" value="{{ request.GET.filter }}">
+            <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+            <button class="btn btn-secondary" type="submit">Szukaj</button>
         </div>
-    </div>
+    </form>
 
-    <!-- Filtered Movie Cards -->
+    <!-- Movie Cards -->
     <div class="row">
-        <div class="col-12">
-            <div class="row">
-                {% for row in csv_data|slice:"1:" %}
-                <div class="col-12 mb-4">
-                    <div class="card">
-                        <div class="row g-0">
-                            <!-- Movie Poster -->
-                            <div class="col-md-4">
-                                {% if row|length > 12 and row.12 %}
-                                <img src="{{ row.12 }}" class="img-poster rounded-start" style="max-height: 400px;" alt="{{ row.1 }}">
-                                {% else %}
-                                <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available">
-                                {% endif %}
-                            </div>
-                            <!-- Movie Details -->
-                            <div class="col-md-8">
-                                <div class="card-body">
-                                    <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
-                                    <h3 class="card-category">Rok: {{ row.2 }}</h3>
-                                    <h4 class="card-category">Czas trwania: {{ row.3 }}</h4>
-                                    <p>{{ row.8 }}</p>
-                                    <p>Oglądnięte: <span class="text-success">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
-                                    <p>Skipnięte: <span class="text-danger">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
-                                    <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
-                                    <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
-                                </div>
-                            </div>
+        {% for row in csv_data|slice:"1:" %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        {% if row|length > 12 and row.12 %}
+                        <img src="{{ row.12 }}" style="max-height:400px;" class="img-fluid rounded-start" alt="{{ row.1 }}">
+                        {% else %}
+                        <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h2>{{ row.0 }}. {{ row.1 }}</h2>
+                            <h3>Rok: {{ row.2 }}</h3>
+                            <h4>Czas trwania: {{ row.3 }}</h4>
+                            <p>{{ row.8 }}</p>
+                            <p>Oglądnięte: <span class="{% if row.9 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                            <p>Skipnięte: <span class="{% if row.10 == 'TRUE' %}text-danger{% else %}text-success{% endif %}">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                            <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                            <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
+        {% endfor %}
     </div>
 </div>
+
 {% endblock %}
