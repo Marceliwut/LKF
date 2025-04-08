@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', index, name='index'),
     path('refresh-data/', refresh_csv_data, name='refresh_data'),
-    path('update-entry/', update_entry, name='update_entry'),
+    path('update_entry/', update_entry, name='update_entry'),
     path("backup_csv/", backup_csv, name="backup_csv"),
     path('file_explorer/', file_explorer, name='file_explorer'),
     path('restore_backup/', restore_backup, name='restore_backup'),

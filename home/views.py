@@ -219,8 +219,10 @@ def update_entry(request):
             # Parse the request payload
             data = json.loads(request.body)
             entry_id = str(data.get("id"))  # Entry ID as a string
-            entry_title = str(data.get("title"))  # Entry title as a string
             field = data.get("field")  # Field to update (watched or skipped)
+
+            # Debugging
+            print(f"Request data: ID={entry_id}, Field={field}")
 
             # Load the current CSV data
             csv_data = load_csv_from_file()
@@ -229,11 +231,15 @@ def update_entry(request):
             if not csv_data or len(csv_data) < 2:
                 return JsonResponse({"status": "error", "message": "CSV data is empty or invalid."})
 
+            # Debugging: Print the CSV data
+            print("CSV Data:", csv_data)
+
             # Update the specific entry
             header, rows = csv_data[0], csv_data[1:]  # Separate header and rows
             updated = False
 
             for row in rows:
+                print(f"Checking row: {row}")  # Debugging
                 if row[0] == entry_id:  # Match the entry by ID
                     if field == "watched":
                         row[9] = "TRUE" if row[9] != "TRUE" else "FALSE"
@@ -243,14 +249,13 @@ def update_entry(request):
                     break  # Break once the entry is updated
 
             if not updated:
-                return JsonResponse({"status": "error", "message": f"Entry with ID {entry_title} not found."})
+                return JsonResponse({"status": "error", "message": f"Entry with ID {entry_id} not found."})
 
             # Save the updated data back to the file
             save_csv_to_file([header] + rows)
-            print("All good!!!")
-            return JsonResponse({"status": "success", "message": f"Entry {entry_title} updated to {field}."})
+            return JsonResponse({"status": "success", "message": f"Film  {entry_id} updated to {field}."})
         except Exception as e:
-            print("Issue!!")
+            print("Error:", e)  # Debugging
             return JsonResponse({"status": "error", "message": str(e)})
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 

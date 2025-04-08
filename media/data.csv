@@ -83,9 +83,9 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 83,Braveheart - Waleczne Serce,1995,2h 58m,12,8.3,1.1M,68,William Wallace leads a rebellion against King Edward I of England.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/or1gBugydmjToAEq7OZY0owwFk.jpg
 84,Buntownik z wyboru,1997,2h 6m,12,8.3,1.1M,71,A janitor with a gift for mathematics seeks guidance from a psychologist.,FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/z2FnLKpFi1HPO7BEJxdkv6hpJSU.jpg
 85,Lawrence z Arabii,1962,3h 38m,16,8.3,319K,100,T.E. Lawrence unites Arab tribes to fight the Turks in WWI.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/AiAm0EtDvyGqNpVoieRw4u65vD1.jpg
-86,Oldboy,2003,2h 15m,-,8.3,647K,78,"After 15 years of imprisonment, a man must track down his captor in five days.",FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/pWDtjs568ZfOTMbURQBYuT4Qxka.jpg
+86,Oldboy,2003,2h 15m,-,8.3,647K,78,"After 15 years of imprisonment, a man must track down his captor in five days.",TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/pWDtjs568ZfOTMbURQBYuT4Qxka.jpg
 87,American Beauty,1999,2h 2m,15,8.3,1.2M,84,A suburban father's mid-life crisis leads to obsession and turmoil.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/s5PXkDqS8W3K4wCPNZBzf10zycw.jpg
-88,Zakochany bez pamięci,2004,1h 48m,16,8.3,1.1M,89,A couple undergoes a procedure to erase their memories of each other.,FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg
+88,Zakochany bez pamięci,2004,1h 48m,16,8.3,1.1M,89,A couple undergoes a procedure to erase their memories of each other.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg
 89,Toy Story,1995,1h 21m,7,8.3,1.1M,96,A cowboy doll feels threatened by a new spaceman toy's arrival.,FALSE,TRUE,FALSE,https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg
 90,2001: Odyseja kosmiczna,1968,2h 29m,-,8.3,728K,84,A spacecraft explores the origins of a mysterious artifact on Jupiter.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/ve72VxNqjGM69Uky4WTo2bK6rfq.jpg
 91,Wściekłe psy,1992,1h 39m,18,8.3,1.1M,81,A heist gone wrong leads to suspicion among surviving criminals.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/xi8Iu6qyTfyZVDVy60raIOYJJmk.jpg
@@ -96,5 +96,5 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 96,Księżniczka Mononoke,1997,2h 14m,13,8.3,441K,76,Ashitaka confronts a war between forest gods and a mining colony.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/cMYCDADoLKLbB83g4WnJegaZimC.jpg
 97,Dr Strangelove,1964,1h 35m,0,8.3,523K,97,Politicians scramble to prevent nuclear war after a general's unhinged decision.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/6x7MzQ6BOMlRzam1StcmPO9v61g.jpg
 98,Deszczowa piosenka,1952,1h 43m,12,8.3,264K,99,A silent film star transitions to talkies while falling for a chorus girl.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/w03EiJVHP8Un77boQeE7hg9DVdU.jpg
-99,Garsoniera,1960,2h 5m,-,8.3,200K,94,"An insurance clerk lets executives use his apartment, complicating his ambitions.",TRUE,TRUE,FALSE,https://image.tmdb.org/t/p/w500/hhSRt1KKfRT0yEhEtRW3qp31JFU.jpg
+99,Garsoniera,1960,2h 5m,-,8.3,200K,94,"An insurance clerk lets executives use his apartment, complicating his ambitions.",FALSE,TRUE,FALSE,https://image.tmdb.org/t/p/w500/hhSRt1KKfRT0yEhEtRW3qp31JFU.jpg
 100,Piętno śmierci,1952,2h 23m,12,-,-,-,A tragic story whose details were not provided in the context.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/dgNTS4EQDDVfkzJI5msKuHu2Ei3.jpg

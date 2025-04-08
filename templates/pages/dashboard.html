@@ -1,3 +1,4 @@
+<!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\pages\dashboard.html -->
 {% extends 'layouts/base.html' %}
 {% load static %}
 {% block content %}
@@ -6,36 +7,45 @@
     document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".update-btn").forEach(button => {
             button.addEventListener("click", function () {
-                const title = this.getAttribute("data-title");
+                const entryId = this.getAttribute("data-id"); // Use data-id for matching
                 const field = this.getAttribute("data-field");
+                const card = button.closest(".col-12"); // Get the parent card container
                 button.disabled = true;
 
-                fetch("update_entry/", {
+                fetch("{% url 'update_entry' %}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRFToken": getCookie("csrftoken"),
                     },
-                    body: JSON.stringify({ title: title, field: field }),
+                    body: JSON.stringify({ id: entryId, field: field }), // Send ID instead of title
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        const statusSpan = button.parentElement.querySelector(
-                            field === "watched" ? "p:nth-of-type(1) span" : "p:nth-of-type(2) span"
-                        );
-                        if (statusSpan) {
-                            statusSpan.textContent = statusSpan.textContent === "Tak" ? "Nie" : "Tak";
-                            statusSpan.className = statusSpan.textContent === "Tak" ? "text-success" : "text-danger";
+                        if (field === "watched") {
+                            // Remove the card from the DOM if "watched" is updated
+                            card.remove();
+                        } else if (field === "skipped") {
+                            // Optionally handle "skipped" logic here
+                            const skippedSpan = card.querySelector("p:nth-of-type(2) span");
+                            if (skippedSpan) {
+                                skippedSpan.textContent = skippedSpan.textContent === "Tak" ? "Nie" : "Tak";
+                                skippedSpan.className = skippedSpan.textContent === "Tak" ? "text-danger" : "text-success";
+                            }
                         }
-                        alert(data.message);
+
+                        // Display success message
+                        displayNotification(data.message, "success");
                     } else {
-                        alert(`Error: ${data.message}`);
+                        // Display error message
+                        displayNotification(`Error: ${data.message}`, "error");
                     }
                     button.disabled = false;
                 })
                 .catch(error => {
                     console.error("Error:", error);
+                    displayNotification("An error occurred. Please try again.", "error");
                     button.disabled = false;
                 });
             });
@@ -55,6 +65,21 @@
             }
             return cookieValue;
         }
+
+        // Function to display notifications
+        function displayNotification(message, type) {
+            const notificationDiv = document.getElementById("notification");
+            if (notificationDiv) {
+                notificationDiv.textContent = message;
+                notificationDiv.className = `alert ${type === "success" ? "alert-success" : "alert-danger"}`;
+                notificationDiv.style.display = "block";
+
+                // Hide the notification after 3 seconds
+                setTimeout(() => {
+                    notificationDiv.style.display = "none";
+                }, 3000);
+            }
+        }
     });
 </script>
 
@@ -62,16 +87,34 @@
     <div class="header-content">
         <h1 class="text-center text-primary fw-bold" style="margin-top:30px;">Lemorkowy Klub Filmowy</h1>
     </div>
+    <div id="notification" class="alert" style="display: none;"></div>
     <!-- Filter Buttons -->
     <div class="btn-group d-flex justify-content-center mb-3">
-        <a href="{% url 'index' %}?filter=not_watched" class="btn btn-info mx-1 {% if request.GET.filter == 'not_watched' %}active{% endif %}">Do oglądnięcia</a>
-        <a href="{% url 'index' %}?filter=watched" class="btn btn-info mx-1 {% if request.GET.filter == 'watched' %}active{% endif %}">Oglądnięte</a>
-        <a href="{% url 'index' %}?filter=skipped" class="btn btn-info mx-1 {% if request.GET.filter == 'skipped' %}active{% endif %}">Skipped</a>
+        <a href="{% url 'index' %}?filter=not_watched" class="btn mx-1 {% if request.GET.filter == 'not_watched' or not request.GET.filter %}btn-info{% endif %}">
+            Do oglądnięcia
+        </a>
+        <a href="{% url 'index' %}?filter=watched" class="btn mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">
+            Oglądnięte
+        </a>
+        <a href="{% url 'index' %}?filter=skipped" class="btn mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">
+            Skipped
+        </a>
     </div>
 
     <!-- Recommendation Button -->
     <div class="text-center mb-3">
         <a href="{% url 'recommend_next_watch' %}" class="btn btn-secondary">Znajdź film na następne spotkanie</a>
+    </div>
+    <!-- Sorting Arrows -->
+    <div class="row mt-2 mb-3 justify-content-center">
+        <a href="{% url 'index' %}?sort=asc{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+           class="btn btn-outline-primary mx-1 {% if request.GET.sort == 'asc' %}active{% endif %}">
+            <i class="fa fa-arrow-up"></i>
+        </a>
+        <a href="{% url 'index' %}?sort=desc{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+           class="btn btn-outline-primary mx-1 {% if request.GET.sort == 'desc' %}active{% endif %}">
+            <i class="fa fa-arrow-down"></i>
+        </a>
     </div>
     <!-- Search Bar -->
     <form method="get" action="{% url 'index' %}" class="text-center mb-3">
@@ -79,7 +122,7 @@
             <input type="text" name="search" class="form-control" placeholder="Szukaj po tytule" value="{{ search_query }}">
             <input type="hidden" name="filter" value="{{ request.GET.filter }}">
             <input type="hidden" name="sort" value="{{ request.GET.sort }}">
-            <button class="btn btn-secondary" type="submit">Szukaj</button>
+            <button class="btn btn-secondary" style="margin-top:0px!important;" type="submit">Szukaj</button>
         </div>
     </form>
 
