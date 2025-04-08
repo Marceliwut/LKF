@@ -59,8 +59,9 @@
 </script>
 
 <div class="content">
-    <h1 class="text-center text-primary fw-bold">Lemorkowy Klub Filmowy</h1>
-
+    <div class="header-content">
+        <h1 class="text-center text-primary fw-bold" style="margin-top:30px;">Lemorkowy Klub Filmowy</h1>
+    </div>
     <!-- Filter Buttons -->
     <div class="btn-group d-flex justify-content-center mb-3">
         <a href="{% url 'index' %}?filter=not_watched" class="btn btn-info mx-1 {% if request.GET.filter == 'not_watched' %}active{% endif %}">Do oglądnięcia</a>
@@ -89,7 +90,7 @@
             <div class="card">
                 <div class="row g-0">
                     <div class="col-md-4">
-                        {% if row|length > 12 and row.12 %}
+                        {% if row|length > 12 and row.12 and row.12 != "N/A" %}
                         <img src="{{ row.12 }}" style="max-height:400px;" class="img-fluid rounded-start" alt="{{ row.1 }}">
                         {% else %}
                         <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available">
@@ -101,10 +102,14 @@
                             <h3>Rok: {{ row.2 }}</h3>
                             <h4>Czas trwania: {{ row.3 }}</h4>
                             <p>{{ row.8 }}</p>
-                            <p>Oglądnięte: <span class="{% if row.9 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
-                            <p>Skipnięte: <span class="{% if row.10 == 'TRUE' %}text-danger{% else %}text-success{% endif %}">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
-                            <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
-                            <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
+                            
+                                <p>Oglądnięte: <span class="{% if row.9 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                                <p>Skipnięte: <span class="{% if row.10 == 'TRUE' %}text-danger{% else %}text-success{% endif %}">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                                <div class="user-buttons" style="margin-top: 30px;">
+                                    <div class="btn-group" role="group">
+                                <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                                <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
+                            </div>
                         </div>
                     </div>
                 </div>
