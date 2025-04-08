@@ -1,64 +1,95 @@
+<!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\includes\footer.html -->
 <footer class="footer">
-    <div class="container-fluid">
-        <div class="text-center">
-            <!-- Footer Section -->
-<div class="row mt-5">
-    <div class="col-12 text-center">
-        <button id="backupButton" class="btn btn-warning">Backup CSV</button>
+    <p>
+        <a href="file_explorer/">Manage and restore backups here</a>
+    </p>
+    <!-- Re-download Button -->
+
+    <div class="copyright">
+        <a href="" target="_blank">@Wonziutki</a> - LKF - Sekcja Młodego Kurosawy.
     </div>
-</div>
+</footer>
+
+<!-- Scroll to Bottom Button -->
+<button id="scrollToBottomBtn" class="scroll-to-bottom-btn">
+    <i class="fa fa-arrow-down"></i>
+</button>
+
+<!-- Scroll to Top Button -->
+<button id="scrollToTopBtn" class="scroll-to-top-btn">
+    <i class="fa fa-arrow-up"></i>
+</button>
 
 <script>
-    document.getElementById("backupButton").addEventListener("click", function () {
-        fetch("{% url 'backup_csv' %}", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                alert(data.message);
-            } else {
-                alert(`Error: ${data.message}`);
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("An error occurred while creating the backup.");
+    // Scroll to Bottom Button Functionality
+    document.getElementById('scrollToBottomBtn').addEventListener('click', function () {
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
         });
     });
 
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === name + "=") {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    // Scroll to Top Button Functionality
+    document.getElementById('scrollToTopBtn').addEventListener('click', function () {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 </script>
-            <button id="refreshDataButton" type="button" class="btn btn-warning">Re-download CSV from backup</button>
 
-        
+<style>
+    /* Scroll to Bottom Button Styles */
+    .scroll-to-bottom-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        z-index: 1000;
+    }
 
+    .scroll-to-bottom-btn:hover {
+        background-color: #0056b3;
+    }
 
-    
-    <!-- Re-download Button -->
-    
-    <div class="copyright">
-        <a href="https://bit.ly/3fKQZaL" target="_blank">Wonziutki</a> - LKF - Sekcja Młodego Kurosawy.
-    </div>
-</div>
-</div>
-</div>
+    .scroll-to-bottom-btn i {
+        font-size: 20px;
+    }
 
-</footer>
+    /* Scroll to Top Button Styles */
+    .scroll-to-top-btn {
+        position: fixed;
+        bottom: 80px; /* Place it above the bottom button */
+        right: 20px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        z-index: 1000;
+    }
+
+    .scroll-to-top-btn:hover {
+        background-color: #1e7e34;
+    }
+
+    .scroll-to-top-btn i {
+        font-size: 20px;
+    }
+</style>

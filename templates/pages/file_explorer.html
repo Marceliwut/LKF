@@ -1,0 +1,93 @@
+
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Media File Explorer</h1>
+    <hr>
+
+    {% if error %}
+        <div class="alert alert-danger">
+            <strong>Error:</strong> {{ error }}
+        </div>
+    {% endif %}
+
+    {% if parent_path %}
+        <a href="?path={{ parent_path }}" class="btn btn-secondary mb-3">
+            <i class="fa fa-arrow-left"></i> Go Back
+        </a>
+    {% endif %}
+
+    <div class="list-group">
+        {% for item in files_and_dirs %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                {% if item.is_file %}
+                    <a href="{{ item.url }}" class="text-decoration-none">
+                        <i class="fa fa-file"></i> {{ item.name }}
+                    </a>
+                    {% if item.is_csv %}
+                        <button class="btn btn-sm btn-success restore-button" data-filename="{{ item.name }}">
+                            Restore
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <a href="?path={{ item.path }}" class="text-decoration-none">
+                        <i class="fa fa-folder"></i> {{ item.name }}
+                    </a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="text-center">No files or directories found in this folder.</p>
+        {% endfor %}
+    </div>  
+</div>
+
+<script>
+    document.querySelectorAll('.restore-button').forEach(button => {
+        button.addEventListener('click', function () {
+            const filename = this.getAttribute('data-filename');
+            const csrfToken = getCookie('csrftoken');
+
+            if (confirm(`Are you sure you want to restore ${filename}?`)) {
+                fetch("{% url 'restore_backup' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ filename: filename }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert(data.message);
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred while restoring the backup.");
+                });
+            }
+        });
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

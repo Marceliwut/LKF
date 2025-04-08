@@ -1,0 +1,106 @@
+Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched,Skipped,Series
+1,Skazani na Shawshank,1994,2h 22m,16,9.3,3M,82,"A banker forms a friendship in prison, maintaining his innocence and hope.",FALSE,FALSE,FALSE
+2,Ojciec chrzestny,1972,2h 55m,15,9.2,2M,100,"Don Vito Corleone hands his empire to his youngest son, Michael.",FALSE,FALSE,FALSE
+3,Mroczny Rycerz,2008,2h 32m,12,9,2.9M,84,Batman and allies face Joker's chaos in Gotham.,TRUE,FALSE,FALSE
+4,Lista Schindlera,1993,3h 15m,16,9,1.5M,95,Oskar Schindler's transformation during WWII in occupied Poland.,FALSE,FALSE,FALSE
+5,Władca Pierścieni: Powrót króla,2003,3h 21m,12,9,2M,94,Men battle Sauron to help Frodo and Sam destroy the One Ring.,FALSE,FALSE,FALSE
+6,Dwunastu gniewnych ludzi,1957,1h 36m,12,9,880K,97,A lone juror forces others to reevaluate evidence during a murder trial.,FALSE,FALSE,FALSE
+7,Ojciec chrzestny II,1974,3h 22m,15,9,1.4M,90,Continuation of Corleone family's saga.,FALSE,FALSE,FALSE
+8,Pulp Fiction,1994,2h 34m,15,8.9,2.3M,95,Intertwining tales of mobsters and redemption.,FALSE,FALSE,FALSE
+9,Władca Pierścieni: Drużyna Pierścienia,2001,2h 58m,12,8.9,2M,92,A Hobbit and companions journey to save Middle-earth by destroying the One Ring.,FALSE,FALSE,FALSE
+10,12th Fail,2023,2h 27m,-,8.9,126K,-,Real-life story of IPS Officer Manoj Kumar Sharma and IRS Officer Shraddha Joshi.,FALSE,FALSE,FALSE
+11,Incepcja,2010,2h 28m,12,8.8,2.6M,74,A thief uses dream-sharing technology to plant an idea in a CEO’s mind.,FALSE,FALSE,FALSE
+12,Podziemny krąg,1999,2h 19m,18,8.8,2.4M,67,An insomniac office worker and a soap maker form an underground fight club.,FALSE,FALSE,FALSE
+13,Forrest Gump,1994,2h 22m,15,8.8,2.3M,82,A man's extraordinary life shaped by historic events and love for his childhood sweetheart.,FALSE,FALSE,FALSE
+14,Dobry, zły i brzydki,1966,2h 41m,16,8.8,821K,90,FALSE,FALSE,FALSE
+15,Władca Pierścieni: Dwie wieże,2002,2h 59m,12,8.8,1.8M,87,Frodo and Sam journey toward Mordor as allies battle Saruman’s forces.,FALSE,FALSE,FALSE
+16,Interstellar,2014,2h 49m,12,8.7,2.1M,74,A team of researchers searches for a new habitable planet for humans.,FALSE,FALSE,FALSE
+17,Chłopcy z ferajny,1990,2h 25m,16,8.7,1.3M,92,The life of a mob associate from youth to adulthood.,FALSE,FALSE,FALSE
+18,Matrix,1999,2h 16m,16,8.7,2.1M,73,A hacker learns about the nature of reality from rebels fighting a cyber-intelligence.,FALSE,FALSE,FALSE
+19,Lot nad kukułczym gniazdem,1975,2h 13m,16,8.7,1.1M,84,A man rallies patients in a mental institution against an authoritarian nurse.,FALSE,FALSE,FALSE
+20,Gwiezdne wojny: Część V - Imperium kontratakuje,1980,2h 4m,12,8.7,1.4M,82,Luke trains as a Jedi while Darth Vader chases his friends.,FALSE,FALSE,FALSE
+21,Milczenie owiec,1991,2h 17m,15,8.6,1.6M,86,A young F.B.I. cadet seeks the help of a cannibal killer to catch another serial murderer.,FALSE,FALSE,FALSE
+22,Siedem,1995,2h 7m,18,8.6,1.8M,65,Two detectives hunt a serial killer who uses the seven deadly sins as motives.,FALSE,FALSE,FALSE
+23,Spider-Man: Poprzez multiwersum,2023,2h 20m,7,8.6,395K,86,"Miles Morales navigates the multiverse, redefining what it means to be a hero.",FALSE,FALSE,FALSE
+24,Terminator 2: Dzień Sądu,1991,2h 17m,15,8.6,1.2M,75,A cyborg protects John Connor from a more advanced cyborg.,FALSE,FALSE,FALSE
+25,Miasto Boga,2002,2h 10m,16,8.6,810K,79,Two boys from Rio follow diverging paths as one becomes a photographer and the other a kingpin.,FALSE,FALSE,FALSE
+26,Zielona mila,1999,3h 9m,18,8.6,1.4M,61,A death row tale where a prisoner possesses the power to heal.,FALSE,FALSE,FALSE
+27,Gwiezdne wojny,1977,2h 1m,12,8.6,1.5M,90,Luke Skywalker and friends try to save the galaxy from the Empire.,FALSE,FALSE,FALSE
+28,Spirited Away: W krainie bogów,2001,2h 5m,12,8.6,866K,96,"A girl stumbles into a magical world ruled by gods, witches, and spirits.",FALSE,FALSE,FALSE
+29,Szeregowiec Ryan,1998,2h 49m,16,8.6,1.5M,91,U.S. soldiers venture behind enemy lines to save a paratrooper.,FALSE,FALSE,FALSE
+30,Życie jest piękne,1997,1h 56m,12,8.6,726K,59,A father uses humor to shield his son from the horrors of a Nazi concentration camp.,FALSE,FALSE,FALSE
+31,Siedmiu samurajów,1954,3h 27m,Not Rated,8.6,371K,98,Seven samurai protect a village from bandits.,FALSE,FALSE,FALSE
+32,To wspaniałe życie,1946,2h 10m,12,8.6,504K,89,An angel shows a desperate man what life would be like without him.,FALSE,FALSE,FALSE
+33,Harakiri,1962,2h 13m,Not Rated,8.6,71K,85,A ronin challenges a clan's integrity with a tale of revenge.,FALSE,FALSE,FALSE
+34,Obcy - 8. pasażer 'Nostromo',1979,1h 57m,16,8.5,971K,89,A spaceship crew encounters a deadly alien lifeform.,FALSE,FALSE,FALSE
+35,Diuna: Część druga,2024,2h 46m,PG-13,8.5,502K,79,Paul Atreides seeks revenge while uniting with the Fremen.,FALSE,FALSE,FALSE
+36,Gladiator,2000,2h 35m,12,8.5,1.7M,67,A betrayed general seeks vengeance in the Roman Empire.,FALSE,FALSE,FALSE
+37,Powrót do przyszłości,1985,1h 56m,13,8.5,1.3M,87,"A teen travels back in time, altering history with a time-traveling DeLorean.",FALSE,FALSE,FALSE
+38,Parasite,2019,2h 12m,16,8.5,986K,97,Greed and class discrimination threaten the symbiotic relationship between the Park family and the Kim clan.,FALSE,FALSE,FALSE
+39,Prestiż,2006,2h 10m,12,8.5,1.5M,66,Two stage magicians in 1890s London engage in a battle to create the ultimate illusion.,FALSE,FALSE,FALSE
+40,Infiltracja,2006,2h 31m,18,8.5,1.4M,85,An undercover cop and a mole in the police try to identify each other.,FALSE,FALSE,FALSE
+41,Whiplash,2014,1h 46m,12,8.5,1M,89,A young drummer is mentored by a ruthless instructor at a music conservatory.,FALSE,FALSE,FALSE
+42,Django,2012,2h 45m,12,8.5,1.7M,81,A freed slave teams up with a bounty hunter to rescue his wife.,FALSE,FALSE,FALSE
+43,Leon zawodowiec,1994,1h 50m,16,8.5,1.3M,64,A hitman reluctantly becomes a protector to a 12-year-old girl.,FALSE,FALSE,FALSE
+44,Król lew,1994,1h 28m,-,8.5,1.2M,88,Lion prince Simba battles his uncle for the throne.,FALSE,FALSE,FALSE
+45,Podejrzani,1995,1h 46m,18,8.5,1.2M,76,A pier shoot-out survivor tells the story of a notorious criminal.,FALSE,FALSE,FALSE
+46,Więzień nienawiści,1998,1h 59m,16,8.5,1.2M,62,A neo-Nazi decides to change and prevent his brother from following his path.,FALSE,FALSE,FALSE
+47,Psychoza,1960,1h 49m,16,8.5,727K,97,A woman on the run takes refuge at a mysterious motel.,FALSE,FALSE,FALSE
+48,Pianista,2002,2h 30m,12,8.5,928K,85,A Polish musician hides in the ruins of Warsaw during WWII.,FALSE,FALSE,FALSE
+49,Grobowiec świetlików,1988,1h 28m,16,8.5,317K,94,Two siblings struggle to survive in Japan during WWII.,FALSE,FALSE,FALSE
+50,Casablanca,1942,1h 42m,12,8.5,612K,100,A cafe owner decides whether to help his ex-lover escape the Nazis.,FALSE,FALSE,FALSE
+51,Nietykalni,2011,1h 52m,12,8.5,942K,57,A quadriplegic aristocrat hires a caregiver from the projects.,FALSE,FALSE,FALSE
+52,Pewnego razu na Dzikim Zachodzie,1968,2h 46m,12,8.5,353K,82,A stranger and a desperado protect a widow from an assassin.,FALSE,FALSE,FALSE
+53,Okno na podwórze,1954,1h 52m,12,8.5,529K,100,A photographer believes he has witnessed a murder.,FALSE,FALSE,FALSE
+54,Cinema Paradiso,1988,2h 54m,12,8.5,287K,80,A director reminisces about his love for cinema during his youth.,FALSE,FALSE,FALSE
+55,Dzisiejsze czasy,1936,1h 27m,12,8.5,262K,96,The Tramp struggles to survive in the modern industrial world.,FALSE,FALSE,FALSE
+56,Światła wielkiego miasta,1931,1h 27m,G,8.5,198K,99,A tramp raises money to help a blind flower girl regain her sight.,FALSE,FALSE,FALSE
+57,Obcy 2 - decydujące starcie,1986,2h 17m,12,8.4,777K,84,Ripley battles the Alien Queen after returning to a colony.,FALSE,FALSE,FALSE
+58,Avengers: Koniec gry,2019,3h 1m,12,8.4,1.3M,78,The Avengers assemble to undo Thanos' actions and restore balance.,FALSE,FALSE,FALSE
+59,Bękarty wojny,2009,2h 33m,18,8.4,1.6M,69,Jewish U.S. soldiers and a theater owner plan to assassinate Nazi leaders.,FALSE,FALSE,FALSE
+60,Joker,2019,2h 2m,18,8.4,1.5M,59,Arthur Fleck descends into crime and chaos as the Joker.,FALSE,FALSE,FALSE
+61,Avengers: Wojna bez granic,2018,2h 29m,
+1
+6,8.4,1.2M,68,The Avengers fight to stop Thanos from destroying the universe.,FALSE,FALSE,FALSE
+62,Lśnienie,1980,2h 26m,18,8.4,1.1M,68,A sinister presence affects a family in an isolated hotel.,FALSE,FALSE,FALSE
+63,Mroczny Rycerz powstaje,2012,2h 44m,16,8.4,1.9M,78,Bruce Wayne returns as Batman to stop Bane's attacks on Gotham.,TRUE,FALSE,FALSE
+64,Czas Apokalipsy,1979,2h 27m,16,8.4,718K,94,An officer is tasked with assassinating a renegade colonel in Vietnam.,FALSE,FALSE,FALSE
+65,Memento,2000,1h 53m,16,8.4,1.3M,83,A man with short-term memory loss tries to track down his wife's murderer.,TRUE,FALSE,FALSE
+66,Idź i patrz,1985,2h 22m,16,8.4,101K,-,A young boy joins the Soviet resistance against ruthless German forces during WWII.,TRUE,FALSE,FALSE
+67,Poszukiwacze zaginionej Arki,1981,1h 55m,12,8.4,1M,86,Indiana Jones races to find the Ark of the Covenant before the Nazis.,FALSE,FALSE,FALSE
+68,Spider-Man Uniwersum,2018,1h 57m,12,8.4,688K,87,Teen Miles Morales becomes Spider-Man and joins others from different dimensions.,FALSE,TRUE,FALSE
+69,Twoje imię.,2016,1h 46m,-,8.4,331K,81,Two teenagers discover they are swapping bodies and decide to meet.,TRUE,FALSE,FALSE
+70,Coco,2017,1h 45m,0,8.4,607K,81,Miguel enters the Land of the Dead to uncover his family's ancestral ban on music.,FALSE,TRUE,FALSE
+71,WALL·E,2008,1h 38m,0,8.4,1.2M,95,A robot on Earth finds love and fights to save humanity.,FALSE,TRUE,FALSE
+72,Życie na podsłuchu,2006,2h 17m,16,8.4,414K,89,An East Berlin secret police agent becomes absorbed in the lives of those he surveils.,TRUE,FALSE,FALSE
+73,Amadeusz,1984,2h 40m,16,8.4,433K,87,Antonio Salieri recounts his rivalry with Wolfgang Amadeus Mozart.,TRUE,FALSE,FALSE
+74,Kafarnaum,2018,2h 6m,12,8.4,108K,75,A 12-year-old sues his parents for neglect while serving a sentence for a violent crime.,TRUE,FALSE,FALSE
+75,Bulwar Zachodzącego Słońca,1950,1h 50m,16,8.4,239K,94,A screenwriter forms a dangerous bond with a faded film star.,TRUE,FALSE,FALSE
+76,Okręt,1981,2h 29m,15,8.4,267K,85,A German U-boat crew endures the terror and claustrophobia of WWII submarine life.,TRUE,FALSE,FALSE
+77,Trzej idioci,2009,2h 50m,12,8.4,441K,67,"Two friends search for their lost companion, revisiting college memories.",FALSE,FALSE,FALSE
+78,Ścieżki chwały,1957,1h 28m,-,8.4,216K,90,A general court-martials three soldiers randomly chosen after a failed attack.,TRUE,FALSE,FALSE
+79,Świadek oskarżenia,1957,1h 56m,-,8.4,140K,76,A barrister defends his client in a murder trial filled with twists.,TRUE,FALSE,FALSE
+80,Niebo i piekło,1963,2h 23m,12,8.4,55K,90,An executive faces extortion after his chauffeur's son is mistakenly kidnapped.,FALSE,FALSE,FALSE
+81,Dyktator,1940,2h 5m,12,8.4,240K,-,A dictator's ambitions collide with the plight of a persecuted barber.,TRUE,FALSE,FALSE
+82,Requiem dla snu,2000,1h 42m,18,8.3,910K,71,Four individuals face devastation as their addictions deepen.,TRUE,FALSE,FALSE
+83,Braveheart - Waleczne Serce,1995,2h 58m,12,8.3,1.1M,68,William Wallace leads a rebellion against King Edward I of England.,TRUE,FALSE,FALSE
+84,Buntownik z wyboru,1997,2h 6m,12,8.3,1.1M,71,A janitor with a gift for mathematics seeks guidance from a psychologist.,FALSE,FALSE,FALSE
+85,Lawrence z Arabii,1962,3h 38m,16,8.3,319K,100,T.E. Lawrence unites Arab tribes to fight the Turks in WWI.,TRUE,FALSE,FALSE
+86,Oldboy,2003,2h 15m,-,8.3,647K,78,"After 15 years of imprisonment, a man must track down his captor in five days.",FALSE,FALSE,FALSE
+87,American Beauty,1999,2h 2m,15,8.3,1.2M,84,A suburban father's mid-life crisis leads to obsession and turmoil.,TRUE,FALSE,FALSE
+88,Zakochany bez pamięci,2004,1h 48m,16,8.3,1.1M,89,A couple undergoes a procedure to erase their memories of each other.,FALSE,FALSE,FALSE
+89,Toy Story,1995,1h 21m,7,8.3,1.1M,96,A cowboy doll feels threatened by a new spaceman toy's arrival.,FALSE,TRUE,FALSE
+90,2001: Odyseja kosmiczna,1968,2h 29m,-,8.3,728K,84,A spacecraft explores the origins of a mysterious artifact on Jupiter.,TRUE,FALSE,FALSE
+91,Wściekłe psy,1992,1h 39m,18,8.3,1.1M,81,A heist gone wrong leads to suspicion among surviving criminals.,TRUE,FALSE,FALSE
+92,Polowanie,2012,1h 55m,16,8.3,370K,77,A teacher's life is shattered by an innocent child's lie.,TRUE,FALSE,FALSE
+93,Dawno temu w Ameryce,1984,3h 49m,18,8.3,382K,75,A former gangster revisits his past filled with regret and ghosts.,FALSE,TRUE,FALSE
+94,Toy Story 3,2010,1h 43m,0,8.3,903K,92,The toys face adventures at daycare as Andy prepares to leave for college.,FALSE,TRUE,FALSE
+95,Gwiezdne wojny: Część VI - Powrót Jedi,1983,2h 11m,12,8.3,1.1M,58,Luke Skywalker tries to save Darth Vader while battling the Empire.,FALSE,TRUE,FALSE
+96,Księżniczka Mononoke,1997,2h 14m,13,8.3,441K,76,Ashitaka confronts a war between forest gods and a mining colony.,TRUE,FALSE,FALSE
+97,Dr Strangelove,1964,1h 35m,0,8.3,523K,97,Politicians scramble to prevent nuclear war after a general's unhinged decision.,TRUE,FALSE,FALSE
+98,Deszczowa piosenka,1952,1h 43m,12,8.3,264K,99,A silent film star transitions to talkies while falling for a chorus girl.,TRUE,FALSE,FALSE
+99,Garsoniera,1960,2h 5m,-,8.3,200K,94,"An insurance clerk lets executives use his apartment, complicating his ambitions.",TRUE,TRUE,FALSE
+100,Piętno śmierci,1952,2h 23m,12,-,-,-,A tragic story whose details were not provided in the context.,TRUE,FALSE,FALSE
+
+
+

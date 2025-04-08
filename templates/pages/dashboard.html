@@ -140,10 +140,10 @@
 
     <!-- Filter Buttons -->
     <div class="btn-group d-flex justify-content-center mb-3" role="group">
-        <a href="{% url 'index' %}?filter=not_watched" class="btn mx-1 {% if request.GET.filter == 'not_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
+        <a href="{% url 'index' %}?filter=not_watched" class="btn filters btn-filters mx-1 {% if request.GET.filter == 'not_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
 
-        <a href="{% url 'index' %}?filter=watched" class="btn mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">Oglądnięte</a>
-        <a href="{% url 'index' %}?filter=skipped" class="btn mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">Skipped</a>
+        <a href="{% url 'index' %}?filter=watched" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">Oglądnięte</a>
+        <a href="{% url 'index' %}?filter=skipped" class="btn btn-filters filters mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">Skipped</a>
     </div>
 
     <!-- Sorting Arrows -->
@@ -208,11 +208,11 @@
                                         <!-- LP Number and Movie Title -->
                                         <h3 class="card-category">Year: {{ row.2 }}</h3>
                                         <h4 class="card-category">Duration: {{ row.3 }}</h4>
-                                        <p>Description: {{ row.8 }}</p>
-                                        <p>Watched: <span class="text-success">Yes</span></p>
-                                        <p>Skipped: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
-                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
-                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                                        <p>{{ row.8 }}</p>
+                                        <p>Oglądnięte: <span class="text-success">Yes</span></p>
+                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                                     </div>
                                     <div class="col-md-6 text-right">
                                         <p>Rating: {{ row.5 }}</p>
@@ -234,11 +234,11 @@
                                         <!-- LP Number and Movie Title -->
                                         <h3 class="card-category">Year: {{ row.2 }}</h3>
                                         <h4 class="card-category">Duration: {{ row.3 }}</h4>
-                                        <p>Description: {{ row.8 }}</p>
-                                        <p>Watched: {% if row.9 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
-                                        <p>Skipped: <span class="text-success">Yes</span></p>
-                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
-                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                                        <p>{{ row.8 }}</p>
+                                        <p>Oglądnięte: {% if row.9 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <p>Skipnięte: <span class="text-success">Yes</span></p>
+                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                                     </div>
                                     <div class="col-md-6 text-right">
                                         <p>Rating: {{ row.5 }}</p>
@@ -261,11 +261,11 @@
                                         <!-- LP Number and Movie Title -->
                                         <h3 class="card-category">Year: {{ row.2 }}</h3>
                                         <h4 class="card-category">Duration: {{ row.3 }}</h4>
-                                        <p>Description: {{ row.8 }}</p>
-                                        <p>Watched: <span class="text-danger">No</span></p>
-                                        <p>Skipped: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
-                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
-                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                                        <p>{{ row.8 }}</p>
+                                        <p>Oglądnięte: <span class="text-danger">No</span></p>
+                                        <p>Skipnięte: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
                                     </div>
                                     <div class="col-md-6 text-right">
                                         <p>Rating: {{ row.5 }}</p>

@@ -10735,6 +10735,14 @@ fieldset[disabled] .btn-primary.active {
     text-decoration: none;
     box-shadow: none;
 }
+
+.btn-filters {
+    display: flex!important;
+    justify-content: center!important;
+    align-items: center!important;
+    text-align: center!important;
+}
+
 .btn-success {
     background: #06402B;
 

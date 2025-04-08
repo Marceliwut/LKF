@@ -11,8 +11,9 @@ from datetime import datetime
 
 # Define the path for the CSV file
 from django.conf import settings
-
 CSV_FILE_PATH = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+BACKUP_DIR = os.path.join(settings.MEDIA_ROOT, 'backups')
+
 
 def index(request):
     csv_data = load_csv_from_file()
@@ -184,26 +185,91 @@ def update_entry(request):
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 
 
-BACKUP_DIR = os.path.join(settings.MEDIA_ROOT, 'backups')
 def backup_csv(request):
     if request.method == "POST":
         try:
-            # Define the source file and backup directory
-            source_file = CSV_FILE_PATH
-            backup_dir = "backups"
-
             # Ensure the backup directory exists
-            if not os.path.exists(backup_dir):
-                os.makedirs(backup_dir)
+            if not os.path.exists(BACKUP_DIR):
+                os.makedirs(BACKUP_DIR)
 
             # Generate a filename with the current date and time
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            backup_file = os.path.join(backup_dir, f"backup_{timestamp}.csv")
+            backup_file = os.path.join(BACKUP_DIR, f"backup_{timestamp}.csv")
 
             # Copy the file to the backup directory
-            shutil.copy(source_file, backup_file)
+            if os.path.exists(CSV_FILE_PATH):
+                shutil.copy(CSV_FILE_PATH, backup_file)
+                return JsonResponse({"status": "success", "message": f"Backup created: {backup_file}"})
+            else:
+                return JsonResponse({"status": "error", "message": f"Source file not found: {CSV_FILE_PATH}"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+    return JsonResponse({"status": "error", "message": "Invalid request method."})
 
-            return JsonResponse({"status": "success", "message": f"Backup created: {backup_file}"})
+from django.shortcuts import render
+from django.conf import settings
+import os
+
+def file_explorer(request):
+    """List files and directories in the media folder."""
+    # Get the current path from the query parameter (default to the media root)
+    current_path = request.GET.get('path', '')
+    absolute_path = os.path.join(settings.MEDIA_ROOT, current_path)
+
+    # Ensure the path is within the media directory
+    if not absolute_path.startswith(settings.MEDIA_ROOT):
+        return render(request, 'pages/file_explorer.html', {
+            'error': 'Invalid path.',
+            'files_and_dirs': [],
+        })
+
+    files_and_dirs = []
+
+    try:
+        # List all files and directories in the current path
+        for item in os.listdir(absolute_path):
+            item_path = os.path.join(absolute_path, item)
+            files_and_dirs.append({
+                'name': item,
+                'is_file': os.path.isfile(item_path),
+                'is_csv': os.path.isfile(item_path) and item.endswith('.csv'),  # Add CSV flag
+                'url': f"{settings.MEDIA_URL}{current_path}/{item}" if os.path.isfile(item_path) else None,
+                'path': os.path.join(current_path, item) if not os.path.isfile(item_path) else None,
+            })
+    except Exception as e:
+        return render(request, 'pages/file_explorer.html', {
+            'error': str(e),
+            'files_and_dirs': [],
+        })
+
+    return render(request, 'pages/file_explorer.html', {
+        'files_and_dirs': files_and_dirs,
+        'current_path': current_path,
+        'parent_path': os.path.dirname(current_path) if current_path else None,
+    })
+
+@csrf_exempt
+def restore_backup(request):
+    """Restore a backup file to /media/data.csv."""
+    if request.method == "POST":
+        try:
+            # Get the filename from the POST request
+            filename = request.POST.get('filename')
+            if not filename:
+                return JsonResponse({"status": "error", "message": "No filename provided."})
+
+            # Construct the source and destination paths
+            source_path = os.path.join(settings.MEDIA_ROOT, 'backups', filename)
+            destination_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+
+            # Ensure the source file exists
+            if not os.path.exists(source_path):
+                return JsonResponse({"status": "error", "message": "Backup file not found."})
+
+            # Copy the backup file to /media/data.csv
+            shutil.copy(source_path, destination_path)
+
+            return JsonResponse({"status": "success", "message": f"Backup {filename} restored to data.csv."})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
     return JsonResponse({"status": "error", "message": "Invalid request method."})
