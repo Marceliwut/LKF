@@ -30,7 +30,7 @@ if not SECRET_KEY:
 
 # Enable/Disable DEBUG Mode
 #DEBUG = str2bool(os.environ.get('DEBUG'))
-DEBUG = False
+DEBUG = True
 #print(' DEBUG -> ' + str(DEBUG) ) 
 
 # Docker HOST
@@ -164,7 +164,7 @@ STATICFILES_DIRS = (
 )
 
 #if not DEBUG:
-#    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
