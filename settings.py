@@ -37,7 +37,7 @@ ROOT_URLCONF = 'home.urls'  # Update this if your URLs are elsewhere
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Correct path to templates
+        'DIRS': [os.path.join(BASE_DIR, 'templates', 'pages')],  # Correct path to templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
