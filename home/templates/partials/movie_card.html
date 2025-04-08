@@ -1,0 +1,35 @@
+<div class="col-12 mb-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6 text-left">
+                    <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
+                    <h3 class="card-category">Year: {{ row.2 }}</h3>
+                    <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                    <p>Description: {{ row.8 }}</p>
+                    <p>Watched: 
+                        {% if row.9 == 'TRUE' %}
+                            <span class="text-success">Yes</span>
+                        {% else %}
+                            <span class="text-danger">No</span>
+                        {% endif %}
+                    </p>
+                    <p>Skipped: 
+                        {% if row.10 == 'TRUE' %}
+                            <span class="text-success">Yes</span>
+                        {% else %}
+                            <span class="text-danger">No</span>
+                        {% endif %}
+                    </p>
+                    <button class="btn btn-success update-btn" data-title="{{ row.1 }}" data-field="watched">Watched</button>
+                    <button class="btn update-btn" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                </div>
+                <div class="col-md-6 text-right">
+                    <p>Rating: {{ row.5 }}</p>
+                    <p>Votes: {{ row.6 }}</p>
+                    <p>Age Rating: {{ row.4 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

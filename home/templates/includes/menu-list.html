@@ -1,0 +1,59 @@
+{% load i18n static admin_black %}
+<ul class="nav">
+  <!-- Filter Buttons -->
+  <a href="{% url 'index' %}?sort=desc" 
+     class="btn btn-info btn-block {% if not request.GET.filter and request.GET.sort == 'desc' %}active{% endif %}" 
+     title="Show Unwatched Movies">
+     Do oglądnięcia
+  </a>
+  <a href="{% url 'index' %}?filter=watched" 
+     class="btn btn-block {% if request.GET.filter == 'watched' %}active{% endif %}" 
+     title="Filter Watched">
+     Oglądnięte
+  </a>
+  <a href="{% url 'index' %}?filter=skipped" 
+     class="btn btn-block {% if request.GET.filter == 'skipped' %}active{% endif %}" 
+     title="Filter Skipped">
+     Skipped
+  </a>
+
+  <!-- Sorting Arrows -->
+  <div class="btn-group mt-4 d-flex justify-content-center" role="group" aria-label="Sort Options">
+      <a href="{% url 'index' %}?sort=asc" 
+         class="btn btn-outline-primary {% if request.GET.sort == 'asc' %}active{% endif %}" 
+         title="Sort Ascending">
+        <i class="fa fa-arrow-up"></i>
+      </a>
+      <a href="{% url 'index' %}?sort=desc" 
+         class="btn btn-outline-secondary {% if request.GET.sort == 'desc' %}active{% endif %}" 
+         title="Sort Descending">
+        <i class="fa fa-arrow-down"></i>
+      </a>
+  </div>
+
+  <!-- Danger Refresh Button -->
+  <div class="text-center mt-4">
+      <button id="refreshDataButton" type="button" class="btn">Re-download</button>
+      <p id="refreshStatus"></p>
+  </div>
+</ul>
+
+<script>
+    document.getElementById("refreshDataButton").addEventListener("click", function() {
+        fetch("/refresh-data/")
+        .then(response => response.json())
+        .then(data => {
+            const statusElement = document.getElementById("refreshStatus");
+            if (data.status === "success") {
+                statusElement.textContent = "Data refreshed successfully!";
+                location.reload(); // Reload the page to reflect new data
+            } else {
+                statusElement.textContent = `Error: ${data.message}`;
+            }
+        })
+        .catch(error => {
+            document.getElementById("refreshStatus").textContent = "Failed to refresh data!";
+            console.error("Error:", error);
+        });
+    });
+</script>

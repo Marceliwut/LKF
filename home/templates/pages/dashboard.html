@@ -1,0 +1,285 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block content %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".update-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const title = this.getAttribute("data-title"); // Get the movie title
+                const field = this.getAttribute("data-field");
+                const button = this; // Reference to the clicked button
+
+                // Disable the button to prevent multiple clicks
+                button.disabled = true;
+
+                fetch("update_entry/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: JSON.stringify({ title: title, field: field }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            // Update the UI dynamically
+                            const statusSpan = button.parentElement.querySelector(
+                                field === "watched" ? "p:nth-of-type(1) span" : "p:nth-of-type(2) span"
+                            );
+                            if (statusSpan) {
+                                if (statusSpan.textContent === "Yes") {
+                                    statusSpan.textContent = "No";
+                                    statusSpan.className = "text-danger";
+                                } else {
+                                    statusSpan.textContent = "Yes";
+                                    statusSpan.className = "text-success";
+                                }
+                            }
+                            alert(data.message);
+                        } else {
+                            alert(`Error: ${data.message}`);
+                        }
+                        button.disabled = false; // Re-enable the button
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        button.disabled = false; // Re-enable the button if there was an error
+                    });
+            });
+        });
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === name + "=") {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const updateButtons = document.querySelectorAll('.update-btn');
+    
+            updateButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const entryId = button.getAttribute('data-id');
+                    const entryTitle = button.getAttribute('data-title');
+                    const field = button.getAttribute('data-field');
+    
+                    fetch('/update-entry/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ id: entryId, title: entryTitle, field: field })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showNotification(data.message, 'success');
+                            setTimeout(() => window.location.reload(), 1500); // Refresh after showing notification
+                        } else {
+                            showNotification(data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        showNotification('Something went wrong!', 'danger');
+                        console.error('Error:', error);
+                    });
+                });
+            });
+        });
+    
+        // Function to dynamically show notifications
+        function showNotification(message, type) {
+            const notificationArea = document.getElementById('notification-area');
+            notificationArea.textContent = message;
+            notificationArea.className = `alert alert-${type} text-center`;
+            notificationArea.classList.remove('d-none');
+    
+            // Automatically hide the notification after 3 seconds
+            setTimeout(() => {
+                notificationArea.classList.add('d-none');
+            }, 3000);
+        }
+    
+        // Function to retrieve CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+<div class="content">
+   <div style = "margin-top: 20px;">
+    <h1 class="display-1 text-primary text-center fw-bold">Lemorkowy Klub Filmowy</h1>
+    </div>
+    <!-- Notification Area -->
+    <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
+
+    <!-- Filter Buttons -->
+    <div class="btn-group d-flex justify-content-center mb-3" role="group">
+        <a href="{% url 'index' %}?filter=not_watched" class="btn mx-1 {% if request.GET.filter == 'not_watched' %}btn-info{% endif %}">Do oglądnięcia</a>
+
+        <a href="{% url 'index' %}?filter=watched" class="btn mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">Oglądnięte</a>
+        <a href="{% url 'index' %}?filter=skipped" class="btn mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">Skipped</a>
+    </div>
+
+    <!-- Sorting Arrows -->
+    <div class="row mt-2 mb-3 justify-content-center">
+        <a href="{% url 'index' %}?sort=asc{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+           class="btn btn-outline-primary mx-1 {% if request.GET.sort == 'asc' %}active{% endif %}">
+            <i class="fa fa-arrow-up"></i>
+        </a>
+        <a href="{% url 'index' %}?sort=desc{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+           class="btn btn-outline-primary mx-1 {% if request.GET.sort == 'desc' %}active{% endif %}">
+            <i class="fa fa-arrow-down"></i>
+        </a>
+    </div>
+
+        <!-- Notification Area -->
+        <div id="notification-area" class="alert text-center d-none" role="alert" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;"></div>
+        <!-- Filter Header -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <h2>
+                    {% if request.GET.filter == 'watched' %} <span class="text-success">Oglądnięte</span> {% elif request.GET.filter == 'skipped' %} <span class="text-danger">Skipped</span> {% else %}
+                    <span class="text-info">Do oglądnięcia</span> {% endif %}
+                </h2>
+            </div>
+        </div>
+<!-- Statistics Section -->
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <p class="lead">
+            <strong>Stats:</strong> 
+            <br>
+            Oglądnięte: <span class="text-success">{{ watched_count }}</span>, 
+            Skipped: <span class="text-danger">{{ skipped_count }}</span>, 
+            Pozostało: <span class="text-info">{{ unwatched_count }}</span>
+
+
+<!-- Search Bar -->
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <form method="get" action="{% url 'index' %}">
+            <div class="input-group mb-3" style="max-width: 500px; margin: 0 auto;">
+                <input type="text" name="search" class="form-control" placeholder="Search by title..." value="{{ search_query }}">
+                <input type="hidden" name="filter" value="{{ request.GET.filter }}">
+                <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+                <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+        <!-- Filtered Movie Cards -->
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    {% for row in csv_data|slice:"1:" %} {% if request.GET.filter == 'watched' and row.9 == 'TRUE' %}
+                    <!-- Show Watched Entries -->
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6 text-left">
+                                        <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
+                                        <!-- LP Number and Movie Title -->
+                                        <h3 class="card-category">Year: {{ row.2 }}</h3>
+                                        <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                                        <p>Description: {{ row.8 }}</p>
+                                        <p>Watched: <span class="text-success">Yes</span></p>
+                                        <p>Skipped: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
+                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <p>Rating: {{ row.5 }}</p>
+                                        <p>Votes: {{ row.6 }}</p>
+                                        <p>Age Rating: {{ row.4 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif request.GET.filter == 'skipped' and row.10 == 'TRUE' %}
+                    <!-- Show Skipped Entries -->
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6 text-left">
+                                        <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
+                                        <!-- LP Number and Movie Title -->
+                                        <h3 class="card-category">Year: {{ row.2 }}</h3>
+                                        <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                                        <p>Description: {{ row.8 }}</p>
+                                        <p>Watched: {% if row.9 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <p>Skipped: <span class="text-success">Yes</span></p>
+                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
+                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <p>Rating: {{ row.5 }}</p>
+                                        <p>Votes: {{ row.6 }}</p>
+                                        <p>Age Rating: {{ row.4 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Default View: Show All Unwatched Entries -->
+                    {% if row.9 != 'TRUE' %}
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6 text-left">
+                                        <h2 class="card-title">{{ row.0 }}. {{ row.1 }}</h2>
+                                        <!-- LP Number and Movie Title -->
+                                        <h3 class="card-category">Year: {{ row.2 }}</h3>
+                                        <h4 class="card-category">Duration: {{ row.3 }}</h4>
+                                        <p>Description: {{ row.8 }}</p>
+                                        <p>Watched: <span class="text-danger">No</span></p>
+                                        <p>Skipped: {% if row.10 == 'TRUE' %} <span class="text-success">Yes</span> {% else %} <span class="text-danger">No</span> {% endif %}</p>
+                                        <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
+                                        <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <p>Rating: {{ row.5 }}</p>
+                                        <p>Votes: {{ row.6 }}</p>
+                                        <p>Age Rating: {{ row.4 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %} {% endif %} {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+    
