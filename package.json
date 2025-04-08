@@ -18,7 +18,7 @@
   },
   "license": "MIT License",
   "devDependencies": {
-    "vite": "^5.2.8"
+    "vite": "^5.4.17"
   },
   "dependencies": {
     "sass": "^1.75.0"
