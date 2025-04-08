@@ -102,13 +102,13 @@
                             <h3>Rok: {{ row.2 }}</h3>
                             <h4>Czas trwania: {{ row.3 }}</h4>
                             <p>{{ row.8 }}</p>
-                            
-                                <p>Oglądnięte: <span class="{% if row.9 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
-                                <p>Skipnięte: <span class="{% if row.10 == 'TRUE' %}text-danger{% else %}text-success{% endif %}">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
-                                <div class="user-buttons" style="margin-top: 30px;">
-                                    <div class="btn-group" role="group">
-                                <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
-                                <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
+                            <p>Oglądnięte: <span class="{% if row.9 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">{% if row.9 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                            <p>Skipnięte: <span class="{% if row.10 == 'TRUE' %}text-danger{% else %}text-success{% endif %}">{% if row.10 == 'TRUE' %}Tak{% else %}Nie{% endif %}</span></p>
+                            <div class="user-buttons" style="margin-top: 30px;">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Oglądnięte</button>
+                                    <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipnij</button>
+                                </div>
                             </div>
                         </div>
                     </div>

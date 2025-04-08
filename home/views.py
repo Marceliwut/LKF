@@ -345,58 +345,146 @@ def restore_backup(request):
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 
 
-def parse_duration(duration):
-    """Parse duration in the format 'Xh XXminutes' and return total minutes."""
-    match = re.match(r'(?:(\d+)h)?\s*(?:(\d+)minutes)?', duration)
-    if match:
-        hours = int(match.group(1)) if match.group(1) else 0
-        minutes = int(match.group(2)) if match.group(2) else 0
-        return hours * 60 + minutes
-    return float('inf')  # Return a very large value if the format is invalid
-
 def recommend_next_watch(request):
     """Recommend the next movie to watch."""
-    csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-    recommendations = {"latest": None, "shortest": None}
-
     try:
         # Load the CSV file
+        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+        if not os.path.exists(csv_file_path):
+            return render(request, 'pages/recommend_next_watch.html', {'error': 'CSV file not found.'})
+
         with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             rows = list(reader)
 
-            if len(rows) > 1:  # Ensure there are rows beyond the header
-                header, data = rows[0], rows[1:]
+        if len(rows) <= 1:
+            return render(request, 'pages/recommend_next_watch.html', {'error': 'No movies available for recommendation.'})
 
-                # Filter movies that are not watched and not skipped
-                not_watched = [
-                    row for row in data
-                    if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE'
-                ]
+        # Exclude watched or skipped movies
+        header, data = rows[0], rows[1:]
+        unwatched_movies = [row for row in data if len(row) > 9 and row[9] != 'TRUE' and row[10] != 'TRUE']
 
-                if not_watched:
-                    # Find the latest movie (highest number)
-                    recommendations["latest"] = max(
-                        not_watched, key=lambda x: int(x[0]) if x[0].isdigit() else 0
-                    )
+        if not unwatched_movies:
+            return render(request, 'pages/recommend_next_watch.html', {'error': 'No unwatched movies available for recommendation.'})
 
-                    # Exclude the latest movie from the shortest movie calculation
-                    not_watched_excluding_latest = [
-                        row for row in not_watched if row != recommendations["latest"]
-                    ]
+        # Find the next movie with the highest number (row[0])
+        next_movie = max(unwatched_movies, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
 
-                    # Find the shortest movie (minimum duration)
-                    if not_watched_excluding_latest:
-                        recommendations["shortest"] = min(
-                            not_watched_excluding_latest,
-                            key=lambda x: parse_duration(x[3]) if len(x) > 3 else float('inf')
-                        )
-    except Exception as e:
+        # Find the shortest movie
+        shortest_movie = min(unwatched_movies, key=lambda x: parse_duration(x[3]))
+
+        # Calculate total duration
+        total_duration_minutes = parse_duration(next_movie[3]) + parse_duration(shortest_movie[3])
+        total_hours = total_duration_minutes // 60
+        total_minutes = total_duration_minutes % 60
+
+        recommendations = {
+            'latest': {
+                'id': next_movie[0],
+                'title': next_movie[1],
+                'year': next_movie[2],
+                'duration': next_movie[3],
+                'description': next_movie[8],
+            },
+            'shortest': {
+                'id': shortest_movie[0],
+                'title': shortest_movie[1],
+                'year': shortest_movie[2],
+                'duration': shortest_movie[3],
+                'description': shortest_movie[8],
+            },
+        }
+
         return render(request, 'pages/recommend_next_watch.html', {
-            "error": str(e),
-            "recommendations": recommendations,
+            'recommendations': recommendations,
+            'total_hours': total_hours,
+            'total_minutes': total_minutes,
         })
 
-    return render(request, 'pages/recommend_next_watch.html', {
-        "recommendations": recommendations,
-    })
+    except Exception as e:
+        return render(request, 'pages/recommend_next_watch.html', {'error': str(e)})
+
+def parse_duration(duration):
+    """Parse duration in the format 'Xh Ym' and return total minutes."""
+    match = re.match(r'(?:(\d+)h)?\s*(?:(\d+)m)?', duration)
+    if match:
+        hours = int(match.group(1)) if match.group(1) else 0
+        minutes = int(match.group(2)) if match.group(2) else 0
+        return hours * 60 + minutes
+    return 0  # Return 0 if the format is invalid
+
+@csrf_exempt
+def find_next_shortest_movie(request):
+    """Find the movie that, when summed with the next in line movie's duration, is closest to 4.5 hours."""
+    try:
+        print("Request received at find_next_shortest_movie endpoint.")
+        if request.method != "POST":
+            print("Invalid request method:", request.method)
+            return JsonResponse({"status": "error", "message": "Invalid request method."})
+
+        # Load the CSV file
+        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+        if not os.path.exists(csv_file_path):
+            print("CSV file not found at:", csv_file_path)
+            return JsonResponse({"status": "error", "message": "CSV file not found."})
+
+        with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            rows = list(reader)
+
+        if len(rows) <= 1:
+            print("No movies available in the CSV file.")
+            return JsonResponse({"status": "error", "message": "No movies available."})
+
+        # Exclude watched or skipped movies
+        header, data = rows[0], rows[1:]
+        unwatched_movies = [row for row in data if len(row) > 9 and row[9] != 'TRUE' and row[10] != 'TRUE']
+        print("Unwatched movies count:", len(unwatched_movies))
+
+        if not unwatched_movies:
+            print("No unwatched movies available.")
+            return JsonResponse({"status": "error", "message": "No unwatched movies available."})
+
+        # Get the currently displayed shortest movie ID from the request
+        current_shortest_id = json.loads(request.body).get("current_shortest_id")
+        print("Current shortest ID received:", current_shortest_id)
+
+        # Exclude the currently displayed shortest movie
+        if current_shortest_id:
+            unwatched_movies = [row for row in unwatched_movies if row[0] != current_shortest_id]
+            print("Movies after excluding current shortest:", len(unwatched_movies))
+
+        if not unwatched_movies:
+            print("No other unwatched movies available.")
+            return JsonResponse({"status": "error", "message": "No other unwatched movies available."})
+
+        # Find the next in line movie (highest ID)
+        next_in_line_movie = max(unwatched_movies, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
+        print("Next in line movie:", next_in_line_movie)
+
+        # Target duration is 4.5 hours (270 minutes)
+        target_duration = 270
+        next_in_line_duration = parse_duration(next_in_line_movie[3])
+        print("Next in line duration (minutes):", next_in_line_duration)
+
+        # Find the movie that, when summed with the next in line movie, is closest to 270 minutes
+        best_match = min(
+            unwatched_movies,
+            key=lambda x: abs((parse_duration(x[3]) + next_in_line_duration) - target_duration)
+        )
+        print("Best match movie:", best_match)
+
+        return JsonResponse({
+            "status": "success",
+            "movie": {
+                "id": best_match[0],
+                "title": best_match[1],
+                "year": best_match[2],
+                "duration": best_match[3],
+                "description": best_match[8],
+            }
+        })
+
+    except Exception as e:
+        print("Exception occurred:", str(e))
+        return JsonResponse({"status": "error", "message": str(e)})
