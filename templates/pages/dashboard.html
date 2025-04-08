@@ -18,21 +18,14 @@
                         "Content-Type": "application/json",
                         "X-CSRFToken": getCookie("csrftoken"),
                     },
-                    body: JSON.stringify({ id: entryId, field: field }), // Send ID instead of title
+                    body: JSON.stringify({ id: entryId, field: field }), // Send ID and field
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        if (field === "watched") {
-                            // Remove the card from the DOM if "watched" is updated
+                        if (field === "watched" || field === "skipped") {
+                            // Remove the card from the DOM if "watched" or "skipped" is updated
                             card.remove();
-                        } else if (field === "skipped") {
-                            // Optionally handle "skipped" logic here
-                            const skippedSpan = card.querySelector("p:nth-of-type(2) span");
-                            if (skippedSpan) {
-                                skippedSpan.textContent = skippedSpan.textContent === "Tak" ? "Nie" : "Tak";
-                                skippedSpan.className = skippedSpan.textContent === "Tak" ? "text-danger" : "text-success";
-                            }
                         }
 
                         // Display success message
@@ -84,19 +77,21 @@
 </script>
 
 <div class="content">
+    <div style="position: fixed; z-index: 1000; top: 0; width: 100%;" id="notification" class="alert" style="display: none;"></div>
     <div class="header-content">
         <h1 class="text-center text-primary fw-bold" style="margin-top:30px;">Lemorkowy Klub Filmowy</h1>
     </div>
-    <div id="notification" class="alert" style="display: none;"></div>
+
+    
     <!-- Filter Buttons -->
-    <div class="btn-group d-flex justify-content-center mb-3">
-        <a href="{% url 'index' %}?filter=not_watched" class="btn mx-1 {% if request.GET.filter == 'not_watched' or not request.GET.filter %}btn-info{% endif %}">
+    <div class="btn-group d-flex flex-column flex-md-row justify-content-center mb-3">
+        <a href="{% url 'index' %}?filter=not_watched" class="btn mx-1 mb-2 mb-md-0 text-center {% if request.GET.filter == 'not_watched' or not request.GET.filter %}btn-info{% endif %}">
             Do oglądnięcia
         </a>
-        <a href="{% url 'index' %}?filter=watched" class="btn mx-1 {% if request.GET.filter == 'watched' %}btn-info{% endif %}">
+        <a href="{% url 'index' %}?filter=watched" class="btn mx-1 mb-2 mb-md-0 text-center {% if request.GET.filter == 'watched' %}btn-info{% endif %}">
             Oglądnięte
         </a>
-        <a href="{% url 'index' %}?filter=skipped" class="btn mx-1 {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">
+        <a href="{% url 'index' %}?filter=skipped" class="btn mx-1 text-center {% if request.GET.filter == 'skipped' %}btn-info{% endif %}">
             Skipped
         </a>
     </div>

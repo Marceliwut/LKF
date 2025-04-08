@@ -231,9 +231,6 @@ def update_entry(request):
             if not csv_data or len(csv_data) < 2:
                 return JsonResponse({"status": "error", "message": "CSV data is empty or invalid."})
 
-            # Debugging: Print the CSV data
-            print("CSV Data:", csv_data)
-
             # Update the specific entry
             header, rows = csv_data[0], csv_data[1:]  # Separate header and rows
             updated = False
@@ -242,9 +239,9 @@ def update_entry(request):
                 print(f"Checking row: {row}")  # Debugging
                 if row[0] == entry_id:  # Match the entry by ID
                     if field == "watched":
-                        row[9] = "TRUE" if row[9] != "TRUE" else "FALSE"
+                        row[9] = "TRUE" if row[9] != "TRUE" else "FALSE"  # Toggle "Oglądnięte"
                     elif field == "skipped":
-                        row[10] = "TRUE" if row[10] != "TRUE" else "FALSE"
+                        row[10] = "TRUE" if row[10] != "TRUE" else "FALSE"  # Toggle "Skipnięte"
                     updated = True
                     break  # Break once the entry is updated
 
@@ -253,12 +250,11 @@ def update_entry(request):
 
             # Save the updated data back to the file
             save_csv_to_file([header] + rows)
-            return JsonResponse({"status": "success", "message": f"Film  {entry_id} updated to {field}."})
+            return JsonResponse({"status": "success", "message": f"Film {entry_id} updated to {field}."})
         except Exception as e:
             print("Error:", e)  # Debugging
             return JsonResponse({"status": "error", "message": str(e)})
     return JsonResponse({"status": "error", "message": "Invalid request method."})
-
 
 def backup_csv(request):
     if request.method == "POST":
