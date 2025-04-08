@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+{% load i18n static admin_black %}
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+{% get_direction as direction %}
+{% get_admin_setting as admin_setting %}
+<html lang="en">
+
+<head>
+    {% include 'includes/head.html' %}
+    {% block extrahead %}{% endblock extrahead %}
+    {% block extrastyle %}{% endblock extrastyle %}
+</head>
+
+<body class="{% block bodyclass %}{% endblock bodyclass %}">
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <!-- Main Panel -->
+            <div class="col-lg-8 col-md-10">
+                {% block content %}{% endblock content %}
+                {% block footer %}
+                {% include 'includes/footer.html' %}
+                {% endblock footer %}
+            </div>
+        </div>
+    </div>
+
+    {% include 'includes/scripts.html' %}
+    {% block extrajs %}{% endblock extrajs %}
+</body>
+
+</html>
