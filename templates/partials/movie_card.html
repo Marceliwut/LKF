@@ -1,55 +1,3 @@
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".update-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                const id = this.getAttribute("data-id");
-                const field = this.getAttribute("data-field");
-    
-                // Disable the button to prevent multiple clicks
-                this.disabled = true;
-    
-                fetch("update_entry/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": getCookie("csrftoken"),
-                    },
-                    body: JSON.stringify({ id: id, field: field }),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                        if (data.status === "success") {
-                            location.reload(); // Reload the page to reflect changes
-                        } else {
-                            this.disabled = false; // Re-enable the button if there was an error
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error:", error);
-                        this.disabled = false; // Re-enable the button if there was an error
-                    });
-            });
-        });
-    
-        // Helper function to get CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== "") {
-                const cookies = document.cookie.split(";");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === name + "=") {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    });
-</script>
-
 <div class="col-12 mb-4">
     <div class="card">
         <div class="card-header">
@@ -60,17 +8,21 @@
                     <h4 class="card-category">Duration: {{ row.3 }}</h4>
                     <p>Description: {{ row.8 }}</p>
                     <p>Watched: 
-                        <span class="{% if row.9 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">
-                            {% if row.9 == 'TRUE' %}Yes{% else %}No{% endif %}
-                        </span>
+                        {% if row.9 == 'TRUE' %}
+                            <span class="text-success">Yes</span>
+                        {% else %}
+                            <span class="text-danger">No</span>
+                        {% endif %}
                     </p>
                     <p>Skipped: 
-                        <span class="{% if row.10 == 'TRUE' %}text-success{% else %}text-danger{% endif %}">
-                            {% if row.10 == 'TRUE' %}Yes{% else %}No{% endif %}
-                        </span>
+                        {% if row.10 == 'TRUE' %}
+                            <span class="text-success">Yes</span>
+                        {% else %}
+                            <span class="text-danger">No</span>
+                        {% endif %}
                     </p>
-                    <button class="btn btn-success update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="watched">Watched</button>
-                    <button class="btn update-btn" data-id="{{ row.0 }}" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
+                    <button class="btn btn-success update-btn" data-title="{{ row.1 }}" data-field="watched">Watched</button>
+                    <button class="btn update-btn" data-title="{{ row.1 }}" data-field="skipped">Skipped</button>
                 </div>
                 <div class="col-md-6 text-right">
                     <p>Rating: {{ row.5 }}</p>

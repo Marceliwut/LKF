@@ -1,6 +1,51 @@
 <footer class="footer">
     <div class="container-fluid">
         <div class="text-center">
+            <!-- Footer Section -->
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <button id="backupButton" class="btn btn-warning">Backup CSV</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById("backupButton").addEventListener("click", function () {
+        fetch("{% url 'backup_csv' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert(data.message);
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while creating the backup.");
+        });
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
             <button id="refreshDataButton" type="button" class="btn btn-warning">Re-download CSV from backup</button>
 
         

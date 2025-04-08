@@ -73,6 +73,7 @@
             updateButtons.forEach(button => {
                 button.addEventListener('click', function () {
                     const entryId = button.getAttribute('data-id');
+                    const entryTitle = button.getAttribute('data-title');
                     const field = button.getAttribute('data-field');
     
                     fetch('/update-entry/', {
@@ -81,13 +82,13 @@
                             'Content-Type': 'application/json',
                             'X-CSRFToken': getCookie('csrftoken')
                         },
-                        body: JSON.stringify({ id: entryId, field: field })
+                        body: JSON.stringify({ id: entryId, title: entryTitle, field: field })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
                             showNotification(data.message, 'success');
-                            setTimeout(() => window.location.reload(), 1000); // Refresh after showing notification
+                            setTimeout(() => window.location.reload(), 1500); // Refresh after showing notification
                         } else {
                             showNotification(data.message, 'danger');
                         }
@@ -168,6 +169,30 @@
                 </h2>
             </div>
         </div>
+<!-- Statistics Section -->
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <p class="lead">
+            <strong>Stats:</strong> 
+            <br>
+            Oglądnięte: <span class="text-success">{{ watched_count }}</span>, 
+            Skipped: <span class="text-danger">{{ skipped_count }}</span>, 
+            Pozostało: <span class="text-info">{{ unwatched_count }}</span>
+
+
+<!-- Search Bar -->
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <form method="get" action="{% url 'index' %}">
+            <div class="input-group mb-3" style="max-width: 500px; margin: 0 auto;">
+                <input type="text" name="search" class="form-control" placeholder="Search by title..." value="{{ search_query }}">
+                <input type="hidden" name="filter" value="{{ request.GET.filter }}">
+                <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+                <button class="btn btn-secondary" style="margin-top: 0px!important;" type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
         <!-- Filtered Movie Cards -->
         <div class="row">
             <div class="col-12">
