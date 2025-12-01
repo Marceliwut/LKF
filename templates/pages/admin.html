@@ -1,0 +1,223 @@
+<!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\pages\dashboard.html -->
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load static %}
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="title">Zarządzanie użytkownikami</h5>
+          <p class="text-muted">Lista wszystkich użytkowników w systemie</p>
+        </div>
+        <div class="card-body">
+          {% if error %}
+            <div class="alert alert-danger alert-with-icon" id="errorAlert" data-notify="container">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="closeAlert('errorAlert')">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <span data-notify="icon" class="nc-icon nc-bell-55"></span>
+              <span data-notify="message">{{ error }}</span>
+            </div>
+          {% endif %}
+          
+          {% if message %}
+            <div class="alert alert-success alert-with-icon" id="successAlert" data-notify="container">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="closeAlert('successAlert')">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <span data-notify="icon" class="nc-icon nc-check-2"></span>
+              <span data-notify="message">{{ message }}</span>
+            </div>
+          {% endif %}
+          
+          <form method="post" action="{% url 'admin' %}">
+            {% csrf_token %}
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th style="width: 30px;">
+                      <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    </th>
+                    <th>ID</th>
+                    <th>Nazwa użytkownika</th>
+                    <th>Email</th>
+                    <th>Data dołączenia</th>
+                    <th>Ostatnia aktywność</th>
+                    <th>Akcje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in users %}
+                    <tr>
+                      <td>
+                        <input type="checkbox" name="user_ids" value="{{ user.id }}" class="user-checkbox">
+                      </td>
+                      <td>{{ user.id }}</td>
+                      <td>{{ user.username }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                      <td>{{ user.last_login|date:"Y-m-d H:i" }}</td>
+                      <td>
+                        <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#resetPasswordModal" onclick="setResetUserId({{ user.id }}, '{{ user.username }}')">
+                          Resetuj hasło
+                        </button>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="7" class="text-center">Brak użytkowników do wyświetlenia</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="card-footer">
+              <button type="submit" id="remove-users-btn" class="btn btn-fill" name="action" value="delete" onclick="return confirm('Czy na pewno chcesz usunąć wybranych użytkowników?')" style="background-color: #ef8157 !important; color: white !important;">
+                Usuń wybranych użytkowników
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSelectAll() {
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(function(checkbox) {
+      checkbox.checked = selectAll.checked;
+    });
+  }
+  
+  function closeAlert(id) {
+    var alert = document.getElementById(id);
+    if (alert) {
+      alert.style.transition = 'opacity 0.5s ease-out';
+      alert.style.opacity = '0';
+      setTimeout(function() {
+        alert.remove();
+      }, 500);
+    }
+  }
+  
+  // Auto-close success message after 5 seconds
+  if (document.getElementById('successAlert')) {
+    setTimeout(function() {
+      closeAlert('successAlert');
+    }, 5000);
+  }
+</script>
+
+<!-- Password Reset Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="background-color: #1a1a2e; color: #fff;">
+      <div class="modal-header" style="border-bottom: 1px solid #333;">
+        <h5 class="modal-title" id="resetPasswordLabel">Resetuj hasło użytkownika</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff;">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="resetPasswordError" class="alert alert-danger" style="display:none;"></div>
+        <form id="resetPasswordForm">
+          <input type="hidden" id="resetUserId" value="">
+          <div class="form-group">
+            <label style="color: #fff;">Nazwa użytkownika: <strong id="resetUsername"></strong></label>
+          </div>
+          <div class="form-group">
+            <label for="newPassword" style="color: #fff;">Nowe hasło</label>
+            <input type="password" class="form-control" id="newPassword" placeholder="Nowe hasło" required style="background-color: #2a2a3e; color: #fff; border-color: #333;">
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword" style="color: #fff;">Potwierdź hasło</label>
+            <input type="password" class="form-control" id="confirmPassword" placeholder="Potwierdź hasło" required style="background-color: #2a2a3e; color: #fff; border-color: #333;">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #333;">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Anuluj</button>
+        <button type="button" class="btn btn-primary" onclick="submitResetPassword()">Resetuj hasło</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var resetUserId = null;
+  var resetUsername = null;
+
+  function setResetUserId(userId, username) {
+    resetUserId = userId;
+    resetUsername = username;
+    document.getElementById('resetUserId').value = userId;
+    document.getElementById('resetUsername').textContent = username;
+    document.getElementById('resetPasswordError').style.display = 'none';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+  }
+
+  function submitResetPassword() {
+    var newPassword = document.getElementById('newPassword').value;
+    var confirmPassword = document.getElementById('confirmPassword').value;
+    var errorDiv = document.getElementById('resetPasswordError');
+
+    // Client-side validation
+    if (!newPassword || !confirmPassword) {
+      errorDiv.textContent = 'Proszę wypełnić wszystkie pola.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      errorDiv.textContent = 'Hasła się nie zgadzają.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      errorDiv.textContent = 'Hasło musi mieć co najmniej 8 znaków.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    // Send AJAX request to reset password
+    fetch('{% url "reset_user_password" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({
+        user_id: resetUserId,
+        new_password: newPassword,
+        confirm_password: confirmPassword
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        // Close modal and show success message
+        $('#resetPasswordModal').modal('hide');
+        alert(data.message);
+        location.reload();
+      } else {
+        errorDiv.textContent = data.message;
+        errorDiv.style.display = 'block';
+      }
+    })
+    .catch(error => {
+      errorDiv.textContent = 'Błąd komunikacji z serwerem.';
+      errorDiv.style.display = 'block';
+    });
+  }
+</script>
+
+{% endblock content %}

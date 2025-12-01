@@ -3,92 +3,107 @@
 {% block content %}
 <div class="content">
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-8 offset-md-2">
       <div class="card">
         <div class="card-header">
-          <h5 class="title">Edit Profile</h5>
+          <h5 class="title">User Registration</h5>
+          <p class="text-muted">Create a new account</p>
         </div>
         <div class="card-body">
-          <form>
-            <div class="row">
-              <div class="col-md-5 pr-md-1">
-                <div class="form-group">
-                  <label>Company (disabled)</label>
-                  <input type="text" class="form-control" disabled="" placeholder="Company" value="Creative Code Inc.">
-                </div>
-              </div>
-              <div class="col-md-3 px-md-1">
-                <div class="form-group">
-                  <label>Username</label>
-                  <input type="text" class="form-control" placeholder="Username" value="michael23">
-                </div>
-              </div>
-              <div class="col-md-4 pl-md-1">
-                <div class="form-group">
-                  <label for="exampleInputEmail1">Email address</label>
-                  <input type="email" class="form-control" placeholder="mike@email.com">
-                </div>
-              </div>
-            </div>
+          <form method="post">
+            {% csrf_token %}
             <div class="row">
               <div class="col-md-6 pr-md-1">
                 <div class="form-group">
-                  <label>First Name</label>
-                  <input type="text" class="form-control" placeholder="Company" value="Mike">
+                  <label>First Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" placeholder="First Name" name="first_name" required>
                 </div>
               </div>
               <div class="col-md-6 pl-md-1">
                 <div class="form-group">
-                  <label>Last Name</label>
-                  <input type="text" class="form-control" placeholder="Last Name" value="Andrew">
+                  <label>Last Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" placeholder="Last Name" name="last_name" required>
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-md-12">
                 <div class="form-group">
-                  <label>Address</label>
-                  <input type="text" class="form-control" placeholder="Home Address"
-                    value="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09">
+                  <label for="email">Email Address <span class="text-danger">*</span></label>
+                  <input type="email" class="form-control" id="email" placeholder="your.email@example.com" name="email" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="username">Username <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="username" placeholder="Choose a username" name="username" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 pr-md-1">
+                <div class="form-group">
+                  <label for="password">Password <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="password" placeholder="Enter password" name="password" required>
+                  <small class="form-text text-muted">At least 8 characters</small>
+                </div>
+              </div>
+              <div class="col-md-6 pl-md-1">
+                <div class="form-group">
+                  <label for="password_confirm">Confirm Password <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="password_confirm" placeholder="Confirm password" name="password_confirm" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Address (Optional)</label>
+                  <input type="text" class="form-control" placeholder="Street address" name="address">
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-md-4 pr-md-1">
                 <div class="form-group">
-                  <label>City</label>
-                  <input type="text" class="form-control" placeholder="City" value="Mike">
+                  <label>City (Optional)</label>
+                  <input type="text" class="form-control" placeholder="City" name="city">
                 </div>
               </div>
               <div class="col-md-4 px-md-1">
                 <div class="form-group">
-                  <label>Country</label>
-                  <input type="text" class="form-control" placeholder="Country" value="Andrew">
+                  <label>Country (Optional)</label>
+                  <input type="text" class="form-control" placeholder="Country" name="country">
                 </div>
               </div>
               <div class="col-md-4 pl-md-1">
                 <div class="form-group">
-                  <label>Postal Code</label>
-                  <input type="number" class="form-control" placeholder="ZIP Code">
+                  <label>Postal Code (Optional)</label>
+                  <input type="text" class="form-control" placeholder="ZIP Code" name="postal_code">
                 </div>
               </div>
             </div>
             <div class="row">
-              <div class="col-md-8">
+              <div class="col-md-12">
                 <div class="form-group">
-                  <label>About Me</label>
-                  <textarea rows="4" cols="80" class="form-control" placeholder="Here can be your description"
-                    value="Mike">Lamborghini Mercy, Your chick she so thirsty, I'm in that two seat Lambo.</textarea>
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="terms" name="terms" required>
+                    <label class="custom-control-label" for="terms">
+                      I agree to the <a href="#">Terms and Conditions</a> <span class="text-danger">*</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
           </form>
         </div>
         <div class="card-footer">
-          <button type="submit" class="btn btn-fill btn-primary">Save</button>
+          <button type="submit" class="btn btn-fill btn-primary">Create Account</button>
+          <p class="text-center mt-3">Already have an account? <a href="#">Sign In</a></p>
         </div>
       </div>
-    </div>
     <div class="col-md-4">
       <div class="card card-user">
         <div class="card-body">

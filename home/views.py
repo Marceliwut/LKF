@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 import requests
 import csv
@@ -11,6 +11,10 @@ from datetime import datetime
 from django.shortcuts import render
 from django.conf import settings
 import re
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login as auth_login
+from .forms import CustomLoginForm, CustomSignupForm, AdminResetPasswordForm, MovieProposalForm
+from .models import MovieProposal, ProposalVote
 
 # Define the path for the CSV file
 from django.conf import settings
@@ -281,6 +285,66 @@ from django.shortcuts import render
 from django.conf import settings
 import os
 
+def user(request):
+   
+
+    return render(request, 'pages/user.html', {
+        
+    })
+
+def register(request):
+   
+
+    return render(request, 'pages/register.html', {
+        
+    })
+
+def login(request):
+   
+
+    return render(request, 'pages/login.html', {
+        
+    })
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            return redirect('home')  # Redirect to home
+    return render(request, 'pages/login.html')
+
+
+def auth_signin(request):
+    """Authentication view that uses CustomLoginForm and renders the admin_black signin template."""
+    if request.method == 'POST':
+        form = CustomLoginForm(request=request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            return redirect('index')
+    else:
+        form = CustomLoginForm(request=request)
+    return render(request, 'accounts/auth-signin.html', {'form': form})
+
+
+def auth_signup(request):
+    """Signup view that uses CustomSignupForm and renders the admin_black signup template."""
+    if request.method == 'POST':
+        form = CustomSignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            return redirect('index')
+    else:
+        form = CustomSignupForm()
+    return render(request, 'accounts/auth-signup.html', {'form': form})
+
+
+
 def file_explorer(request):
     """List files and directories in the media folder."""
     # Get the current path from the query parameter (default to the media root)
@@ -493,3 +557,362 @@ def parse_duration(duration):
     hours = int(match.group(1) or 0)
     minutes = int(match.group(2) or 0)
     return hours * 60 + minutes
+
+
+def login_view(request):
+    """Handle user login."""
+    if request.method == 'POST':
+        username_or_email = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Try to authenticate with username first
+        user = authenticate(request, username=username_or_email, password=password)
+        
+        # If not found, try with email
+        if user is None:
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
+        
+        if user is not None:
+            auth_login(request, user)
+            return render(request, 'pages/dashboard.html')
+        else:
+            error_message = "Błędna nazwa użytkownika/email lub hasło"
+            return render(request, 'pages/login.html', {'error': error_message})
+    
+    return render(request, 'pages/login.html')
+
+
+def register_view(request):
+    """Handle user registration."""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        
+        # Validate passwords match
+        if password != password_confirm:
+            error_message = "Hasła się nie zgadzają"
+            return render(request, 'pages/register.html', {'error': error_message})
+        
+        # Validate password length
+        if len(password) < 8:
+            error_message = "Hasło musi mieć co najmniej 8 znaków"
+            return render(request, 'pages/register.html', {'error': error_message})
+        
+        # Check if user already exists
+        if User.objects.filter(username=username).exists():
+            error_message = "Nazwa użytkownika już istnieje"
+            return render(request, 'pages/register.html', {'error': error_message})
+        
+        if User.objects.filter(email=email).exists():
+            error_message = "Email już jest zarejestrowany"
+            return render(request, 'pages/register.html', {'error': error_message})
+        
+        # Create new user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+        
+        # Log the user in automatically
+        auth_login(request, user)
+        return render(request, 'pages/dashboard.html')
+    
+    return render(request, 'pages/register.html')
+
+
+def admin_view(request):
+    """Admin page to manage users - only accessible by 'admin' user."""
+    # Check if user is authenticated and is the admin user
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return render(request, 'pages/dashboard.html', {
+            'error': 'Brak dostępu. Tylko użytkownik admin może przeglądać tę stronę.'
+        })
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        user_ids = request.POST.getlist('user_ids')
+        
+        if action == 'delete' and user_ids:
+            try:
+                from django.db.models import Q
+                User.objects.filter(id__in=user_ids).delete()
+                message = f"Usunięto {len(user_ids)} użytkownika(ów)"
+                users = User.objects.all()
+                return render(request, 'pages/admin.html', {'users': users, 'message': message})
+            except Exception as e:
+                error_message = f"Błąd przy usuwaniu użytkowników: {str(e)}"
+                users = User.objects.all()
+                return render(request, 'pages/admin.html', {'users': users, 'error': error_message})
+    
+    users = User.objects.all()
+    return render(request, 'pages/admin.html', {'users': users})
+
+
+def logout_view(request):
+    """Handle user logout."""
+    from django.contrib.auth import logout
+    logout(request)
+    # Redirect to configured logout redirect (reuses admin_black signin)
+    try:
+        return redirect(settings.LOGOUT_REDIRECT_URL)
+    except Exception:
+        return render(request, 'pages/dashboard.html', {'message': 'Zostałeś wylogowany'})
+
+
+def redirect_to_admin_signin(request):
+    """Redirect named 'login' URL to the existing admin_black signin page."""
+    return redirect('/accounts/auth-signin/')
+
+
+@csrf_exempt
+def reset_user_password(request):
+    """Admin function to reset a user's password."""
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            new_password = data.get('new_password')
+            confirm_password = data.get('confirm_password')
+            
+            # Validate passwords match
+            if new_password != confirm_password:
+                return JsonResponse({'status': 'error', 'message': 'Hasła się nie zgadzają.'})
+            
+            # Validate password length
+            if len(new_password) < 8:
+                return JsonResponse({'status': 'error', 'message': 'Hasło musi mieć co najmniej 8 znaków.'})
+            
+            # Get the user and reset password
+            user = User.objects.get(id=user_id)
+            user.set_password(new_password)
+            user.save()
+            
+            return JsonResponse({'status': 'success', 'message': f'Hasło użytkownika {user.username} zostało zmienione.'})
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Użytkownik nie znaleziony.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+    
+    return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})
+
+
+def propose_movie(request):
+    """Allow logged-in users to propose a movie."""
+    if not request.user.is_authenticated:
+        return redirect('auth_signin')
+    
+    if request.method == 'POST':
+        form = MovieProposalForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            imdb_id = form.cleaned_data.get('imdb_id')
+            
+            # Check if movie with this title already exists
+            existing = MovieProposal.objects.filter(title__iexact=title).first()
+            if existing:
+                message = f"Film '{title}' został już zaproponowany przez {existing.proposer.username}. Zagłosuj na niego zamiast tego!"
+                return render(request, 'pages/propose.html', {'form': form, 'message': message})
+            
+            # Create new proposal
+            MovieProposal.objects.create(title=title, imdb_id=imdb_id, proposer=request.user)
+            message = f"Film '{title}' został zaproponowany!"
+            return render(request, 'pages/propose.html', {'form': MovieProposalForm(), 'message': message, 'success': True})
+    else:
+        form = MovieProposalForm()
+    
+    return render(request, 'pages/propose.html', {'form': form})
+
+
+def search_imdb(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Musisz się zalogować.'})
+    
+    query = request.GET.get('q', '').strip()
+    if not query or len(query) < 2:
+        return JsonResponse({'status': 'error', 'message': 'Wpisz co najmniej 2 znaki.'})
+    
+    try:
+        # Exact URL as in your working example
+        api_url = "https://api.imdbapi.dev/search/titles"
+
+        params = {
+            'query': query
+        }
+
+        response = requests.get(api_url, params=params, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+
+        # imdbapi.dev: titles are in "titles"
+        titles = data.get('titles', [])
+        if not titles:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Nie znaleziono filmów o takim tytule.'
+            })
+
+        results = []
+        for m in titles[:10]:
+            title = m.get('primaryTitle') or m.get('originalTitle') or ''
+            year = m.get('startYear') or ''
+            imdbid = m.get('id') or ''
+            poster = ''
+            img = m.get('primaryImage') or {}
+            if isinstance(img, dict):
+                poster = img.get('url', '')
+
+            results.append({
+                'title': title,
+                'year': year,
+                'imdbid': imdbid,
+                'poster': poster,
+            })
+
+        if not results:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Nie znaleziono filmów o takim tytule.'
+            })
+
+        return JsonResponse({
+            'status': 'success',
+            'results': results
+        })
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Błąd komunikacji z IMDb: {str(e)}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Błąd: {str(e)}'
+        })
+
+
+
+from django.db.models import Count
+import requests
+
+def vote_page(request):
+    """Show all movie proposals sorted by votes."""
+    from django.db.models import Count
+    import requests
+    
+    proposals = MovieProposal.objects.annotate(
+        vote_count=Count('proposal_votes')
+    ).order_by('-vote_count', '-created_at')
+    
+    user_votes = set()
+    if request.user.is_authenticated:
+        user_votes = set(
+            ProposalVote.objects.filter(voter=request.user).values_list('proposal_id', flat=True)
+        )
+    
+    proposals_with_votes = []
+    for p in proposals:
+        # Get voter usernames
+        voters = ProposalVote.objects.filter(proposal=p).values_list('voter__username', flat=True)
+        voter_names = list(voters)  # ['user1', 'user2', ...]
+        
+        imdb_data = {}
+        if p.imdb_id:
+            try:
+                url = f"https://api.imdbapi.dev/titles/{p.imdb_id}"
+                resp = requests.get(url, timeout=5)
+                if resp.status_code == 200:
+                    payload = resp.json()
+                    d = payload.get('title', {}) or payload
+                    img = d.get('primaryImage') or {}
+                    rating = d.get('rating') or {}
+                    
+                    imdb_data = {
+                        "title": d.get('primaryTitle') or d.get('originalTitle') or "",
+                        "year": d.get('startYear') or "",
+                        "plot": (d.get('plotOutline', {}).get('text') if isinstance(d.get('plotOutline'), dict) else ""),
+                        "runtime": d.get('runtimeSeconds'),
+                        "genres": d.get('genres') or [],
+                        "poster": img.get('url') if isinstance(img, dict) else "",
+                        "imdb_rating": rating.get('aggregateRating'),
+                        "imdb_votes": rating.get('voteCount'),
+                    }
+            except Exception:
+                pass
+
+        proposals_with_votes.append({
+            'id': p.id,
+            'title': p.title,
+            'proposer': p.proposer.username,
+            'vote_count': p.vote_count,
+            'created_at': p.created_at,
+            'user_voted': p.id in user_votes,
+            'imdb_id': p.imdb_id,
+            'imdb': imdb_data,
+            'voters': voter_names,  # Add this line
+        })
+    
+    return render(request, 'pages/vote.html', {
+        'proposals': proposals_with_votes,
+        'is_authenticated': request.user.is_authenticated,
+        'is_admin': request.user.is_authenticated and request.user.username == 'admin'
+    })
+
+
+def vote_proposal(request, proposal_id):
+    """Handle voting on a proposal (AJAX)."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Musisz się zalogować, aby głosować.'})
+    
+    try:
+        proposal = MovieProposal.objects.get(id=proposal_id)
+        
+        # Check if user already voted
+        vote = ProposalVote.objects.filter(proposal=proposal, voter=request.user).first()
+        if vote:
+            # Remove vote
+            vote.delete()
+            action = 'removed'
+        else:
+            # Add vote
+            ProposalVote.objects.create(proposal=proposal, voter=request.user)
+            action = 'added'
+        
+        # Get updated vote count
+        vote_count = ProposalVote.objects.filter(proposal=proposal).count()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Głos {action}.',
+            'vote_count': vote_count,
+            'action': action
+        })
+    except MovieProposal.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Propozycja nie znaleziona.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+
+
+def delete_proposal(request, proposal_id):
+    """Admin function to delete a movie proposal."""
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
+    
+    try:
+        proposal = MovieProposal.objects.get(id=proposal_id)
+        title = proposal.title
+        proposal.delete()
+        return JsonResponse({'status': 'success', 'message': f'Propozycja "{title}" została usunięta.'})
+    except MovieProposal.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Propozycja nie znaleziona.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})

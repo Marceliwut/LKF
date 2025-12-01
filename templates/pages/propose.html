@@ -1,0 +1,236 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="title">Zaproponuj film</h5>
+          <p class="text-muted">Zaproponuj film na kolejne spotkanie</p>
+        </div>
+        <div class="card-body">
+          {% if message %}
+            <div class="alert {% if success %}alert-success{% else %}alert-info{% endif %} alert-with-icon" id="messageAlert" data-notify="container">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="closeAlert('messageAlert')">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <span data-notify="icon" class="nc-icon {% if success %}nc-check-2{% else %}nc-bell-55{% endif %}"></span>
+              <span data-notify="message">{{ message }}</span>
+            </div>
+          {% endif %}
+
+          <form method="post" action="{% url 'propose' %}">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="imdb-search">Szukaj filmu na IMDb</label>
+              <input type="text" id="imdb-search" class="form-control" placeholder="Wpisz tytuł filmu..." autocomplete="off">
+              <div id="imdb-results" class="list-group mt-2" style="display: none;"></div>
+            </div>
+            
+            <div class="form-group">
+              <div style="display:none;"> "<label for="title">{{ form.title.label }}</label> 
+              {{ form.title }}</div>
+              <small class="form-text text-muted" id="selected-imdb">Wybierz film z wyszukiwania IMDb</small>
+              {% if form.title.errors %}
+                <div class="text-danger mt-2">
+                  {% for error in form.title.errors %}
+                    <small>{{ error }}</small>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <!-- Hidden IMDb ID field -->
+            {{ form.imdb_id }}
+
+            <!-- Selected movie preview -->
+            <div id="imdb-selected-preview" class="mt-3" style="display:none;">
+  <div class="card">
+    <div class="card-body d-flex">
+      <div id="imdb-selected-poster" style="margin-right:15px;"></div>
+      <div class="flex-grow-1">
+        <h5 id="imdb-selected-title" class="card-title mb-1"></h5>
+        <p id="imdb-selected-year" class="card-subtitle text-muted mb-1"></p>
+        <p id="imdb-selected-id" class="small text-muted mb-1"></p>
+        <p id="imdb-selected-extra" class="small mb-0"></p>
+      </div>
+      <button type="button"
+              id="imdb-selected-clear"
+              class="btn btn-link text-danger"
+              style="font-size: 1.5rem; line-height: 1; padding: 0 0 0 10px;">
+        &times;
+      </button>
+    </div>
+  </div>
+</div>
+
+
+            <div class="text-center mt-3">
+              <button type="submit" class="btn btn-primary btn-fill">Zaproponuj film</button>
+              <a href="{% url 'vote' %}" class="btn btn-secondary ml-2">Przejdź do głosowania</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function closeAlert(id) {
+    var alert = document.getElementById(id);
+    if (alert) {
+      alert.style.transition = 'opacity 0.5s ease-out';
+      alert.style.opacity = '0';
+      setTimeout(function() {
+        alert.remove();
+      }, 500);
+    }
+  }
+  
+  // Auto-close success message after 5 seconds
+  if (document.getElementById('messageAlert')) {
+    setTimeout(function() {
+      closeAlert('messageAlert');
+    }, 5000);
+  }
+  
+  // IMDb search functionality
+  const searchInput = document.getElementById('imdb-search');
+  const resultsDiv = document.getElementById('imdb-results');
+  // IDs come from the Django form widgets in home/forms.py
+  const titleInput = document.getElementById('movieTitleInput') || document.getElementById('id_title');
+  const imdbIdInput = document.getElementById('imdbIdInput') || document.getElementById('id_imdb_id');
+  const selectedImdbSpan = document.getElementById('selected-imdb');
+  let searchTimeout;
+  
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+      resultsDiv.style.display = 'none';
+      resultsDiv.innerHTML = '';
+      return;
+    }
+    
+    // Debounce search after 300ms
+    searchTimeout = setTimeout(function() {
+      fetch(`{% url 'search_imdb' %}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          resultsDiv.innerHTML = '';
+          
+          if (data.status === 'error') {
+            resultsDiv.innerHTML = `<div class="list-group-item text-danger">${data.message}</div>`;
+            resultsDiv.style.display = 'block';
+            return;
+          }
+          
+          if (data.results.length === 0) {
+            resultsDiv.innerHTML = '<div class="list-group-item">Nie znaleziono filmów</div>';
+            resultsDiv.style.display = 'block';
+            return;
+          }
+          
+          data.results.forEach(movie => {
+            const div = document.createElement('div');
+            div.className = 'list-group-item list-group-item-action cursor-pointer';
+            div.style.cursor = 'pointer';
+            div.style.padding = '10px';
+            
+            const poster = movie.poster && movie.poster !== 'N/A' 
+              ? `<img src="${movie.poster}" style="height: 30px; margin-right: 10px;">`
+              : '';
+            
+            div.innerHTML = `
+              ${poster}
+              <strong>${movie.title}</strong> (${movie.year})
+              <br><small class="text-muted">IMDb ID: ${movie.imdbid}</small>
+            `;
+            
+            div.addEventListener('click', function() {
+              titleInput.value = movie.title;
+              imdbIdInput.value = movie.imdbid;
+              resultsDiv.style.display = 'none';
+              resultsDiv.innerHTML = '';
+              selectedImdbSpan.textContent = `✓ Wybrano: ${movie.title} (${movie.year})`;
+              selectedImdbSpan.style.color = '#28a745';
+
+                // Clear selected movie and search (big X button)
+  const clearBtn = document.getElementById('imdb-selected-clear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      // Clear inputs
+      titleInput.value = '';
+      imdbIdInput.value = '';
+      searchInput.value = '';
+
+      // Clear helper text
+      selectedImdbSpan.textContent = 'Wybierz film z wyszukiwania IMDb';
+      selectedImdbSpan.style.color = '';
+
+      // Hide preview and results
+      const preview = document.getElementById('imdb-selected-preview');
+      const posterDiv = document.getElementById('imdb-selected-poster');
+      const titleEl = document.getElementById('imdb-selected-title');
+      const yearEl = document.getElementById('imdb-selected-year');
+      const idEl = document.getElementById('imdb-selected-id');
+      const extraEl = document.getElementById('imdb-selected-extra');
+
+      posterDiv.innerHTML = '';
+      titleEl.textContent = '';
+      yearEl.textContent = '';
+      idEl.textContent = '';
+      extraEl.textContent = '';
+
+      preview.style.display = 'none';
+      resultsDiv.innerHTML = '';
+      resultsDiv.style.display = 'none';
+    });
+  }
+
+
+              // Fill preview card
+              const preview = document.getElementById('imdb-selected-preview');
+              const posterDiv = document.getElementById('imdb-selected-poster');
+              const titleEl = document.getElementById('imdb-selected-title');
+              const yearEl = document.getElementById('imdb-selected-year');
+              const idEl = document.getElementById('imdb-selected-id');
+              const extraEl = document.getElementById('imdb-selected-extra');
+
+              if (movie.poster && movie.poster !== 'N/A') {
+                posterDiv.innerHTML = `<img src="${movie.poster}" style="height:120px;">`;
+              } else {
+                posterDiv.innerHTML = '';
+              }
+
+              titleEl.textContent = movie.title || '';
+              yearEl.textContent = movie.year ? `Rok: ${movie.year}` : '';
+              idEl.textContent = movie.imdbid ? `IMDb ID: ${movie.imdbid}` : '';
+              extraEl.textContent = '';
+              preview.style.display = 'block';
+            });
+            
+            resultsDiv.appendChild(div);
+          });
+          
+          resultsDiv.style.display = 'block';
+        })
+        .catch(error => {
+          resultsDiv.innerHTML = `<div class="list-group-item text-danger">Błąd: ${error}</div>`;
+          resultsDiv.style.display = 'block';
+        });
+    }, 300);
+  });
+  
+  // Close results when clicking outside
+  document.addEventListener('click', function(event) {
+    if (event.target.id !== 'imdb-search' && !resultsDiv.contains(event.target)) {
+      resultsDiv.style.display = 'none';
+    }
+  });
+</script>
+
+{% endblock content %}

@@ -1,0 +1,189 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="title">Głosowanie na filmy</h5>
+          <p class="text-muted">Zagłosuj na film, który chcesz obejrzeć na następnym spotkaniu</p>
+        </div>
+        <div class="card-body">
+          {% if is_authenticated %}
+            <div class="mb-3">
+              <a href="{% url 'propose' %}" class="btn btn-primary btn-fill">Zaproponuj nowy film</a>
+            </div>
+          {% else %}
+            <div class="alert alert-info">
+              <a href="{% url 'auth_signin' %}" class="alert-link">Zaloguj się</a>, aby móc zaproponować lub głosować na filmy.
+            </div>
+          {% endif %}
+
+          {% if proposals %}
+            <div class="row">
+              {% for proposal in proposals %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                  <div class="card h-100">
+                    {% if proposal.imdb.poster %}
+                      <img src="{{ proposal.imdb.poster }}" class="card-img-top" alt="{{ proposal.title }}">
+                    {% else %}
+                      <img src="{% static 'assets/img/anime3.png' %}" class="card-img-top" alt="{{ proposal.title }}">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                      <h5 class="card-title mb-1">
+                        {{ proposal.title }}
+                        {% if proposal.imdb.year %}
+                          <small class="text-muted">({{ proposal.imdb.year }})</small>
+                        {% endif %}
+                      </h5>
+                      <p class="mb-1"><small class="text-muted">Zaproponowany przez: {{ proposal.proposer }}</small></p>
+
+                      {% if proposal.imdb.imdb_rating %}
+                        <p class="mb-1">
+                          <span class="badge badge-warning">IMDb {{ proposal.imdb.imdb_rating }}</span>
+                          {% if proposal.imdb.imdb_votes %}
+                            <small class="text-muted">({{ proposal.imdb.imdb_votes }} głosów)</small>
+                          {% endif %}
+                        </p>
+                      {% endif %}
+
+                      {% if proposal.imdb.genres %}
+                        <p class="mb-1">
+                          <small class="text-muted">
+                            Gatunki: {{ proposal.imdb.genres|join:", " }}
+                          </small>
+                        </p>
+                      {% endif %}
+
+                      {% if proposal.imdb.plot %}
+                        <p class="card-text mb-2" style="font-size: 0.9rem; max-height: 4.5em; overflow: hidden;">
+                          {{ proposal.imdb.plot }}
+                        </p>
+                      {% endif %}
+
+                      <p class="mb-2">
+                        <small class="text-muted">
+                          Propozycja: {{ proposal.created_at|date:"Y-m-d H:i" }}
+                        </small>
+                      </p>
+
+                      <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                          <span class="badge badge-primary" id="vote-count-{{ proposal.id }}">
+                            {{ proposal.vote_count }} głosów
+                          </span>
+                          
+                          {% if is_authenticated %}
+                            <div>
+                              <button type="button"
+                                      class="btn btn-sm {% if proposal.user_voted %}btn-success{% else %}btn-outline-success{% endif %}"
+                                      id="vote-btn-{{ proposal.id }}"
+                                      onclick="toggleVote({{ proposal.id }})">
+                                {% if proposal.user_voted %}✓ Zagłosowałem{% else %}Głosuj{% endif %}
+                              </button>
+                              {% if is_admin %}
+                                <button type="button"
+                                        class="btn btn-sm btn-danger ml-2"
+                                        onclick="deleteProposal({{ proposal.id }}, '{{ proposal.title }}')">
+                                  Usuń
+                                </button>
+                              {% endif %}
+                            </div>
+                          {% endif %}
+                        </div>
+                        
+                        {% if proposal.voters %}
+                          <div class="voters-list" style="font-size: 0.8rem;">
+                            <small class="text-muted">Głosy od:</small>
+                            <div class="mt-1">
+                              {% for voter in proposal.voters %}
+                                <span class="badge badge-light border mr-1 mb-1">{{ voter }}</span>
+                              {% endfor %}
+                            </div>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="alert alert-info">
+              Brak zaproponowanych filmów. {% if is_authenticated %}<a href="{% url 'propose' %}" class="alert-link">Zaproponuj pierwszy!</a>{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if is_authenticated %}
+<script>
+  function toggleVote(proposalId) {
+    fetch(`{% url 'vote_proposal' 0 %}`.replace('0', proposalId), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        const btn = document.getElementById(`vote-btn-${proposalId}`);
+        const countBadge = document.getElementById(`vote-count-${proposalId}`);
+        
+        if (data.action === 'added') {
+          btn.classList.remove('btn-outline-success');
+          btn.classList.add('btn-success');
+          btn.textContent = '✓ Zagłosowałem';
+        } else {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline-success');
+          btn.textContent = 'Głosuj';
+        }
+        
+        countBadge.textContent = data.vote_count + ' głosów';
+      } else {
+        alert('Błąd: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Błąd komunikacji z serwerem.');
+    });
+  }
+
+  {% if is_admin %}
+  function deleteProposal(proposalId, title) {
+    if (confirm(`Czy na pewno chcesz usunąć propozycję "${title}"?`)) {
+      fetch(`{% url 'delete_proposal' 0 %}`.replace('0', proposalId), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert(data.message);
+          location.reload();
+        } else {
+          alert('Błąd: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Błąd komunikacji z serwerem.');
+      });
+    }
+  }
+  {% endif %}
+</script>
+{% endif %}
+
+{% endblock content %}

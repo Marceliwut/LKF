@@ -15,9 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from home import views as home_views
 
 urlpatterns = [
     path('', include('home.urls')),
+    path('accounts/auth-signin/', home_views.auth_signin, name='auth_signin'),
+    path('accounts/auth-signup/', home_views.auth_signup, name='auth_signup'),
     path("admin/", admin.site.urls),
     path("", include('admin_black.urls')),
     path("__reload__/", include("django_browser_reload.urls"))

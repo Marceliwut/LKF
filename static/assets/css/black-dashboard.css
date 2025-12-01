@@ -87,6 +87,7 @@ section {
 }
 body {
     margin: 0;
+    padding-top: 5%;
     font-family: Poppins, sans-serif;
     font-size: 0.875rem;
     font-weight: 400;
@@ -98,6 +99,9 @@ body {
 [tabindex="-1"]:focus {
     outline: 0 !important;
 }
+
+
+
 hr {
     box-sizing: content-box;
     height: 0;

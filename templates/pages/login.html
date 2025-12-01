@@ -1,0 +1,86 @@
+<!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\pages\dashboard.html -->
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load static %}
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="title">Logowanie</h5>
+          <p class="text-muted">Zaloguj się do swojego konta</p>
+        </div>
+        <div class="card-body">
+          {% if error %}
+            <div class="alert alert-danger alert-with-icon" id="errorAlert" data-notify="container">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="closeError()">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <span data-notify="icon" class="nc-icon nc-bell-55"></span>
+              <span data-notify="message">{{ error }}</span>
+            </div>
+            <script>
+              function closeError() {
+                var errorAlert = document.getElementById('errorAlert');
+                if (errorAlert) {
+                  errorAlert.style.transition = 'opacity 0.5s ease-out';
+                  errorAlert.style.opacity = '0';
+                  setTimeout(function() {
+                    errorAlert.remove();
+                  }, 500);
+                }
+              }
+              
+              document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                  closeError();
+                }, 5000);
+              });
+            </script>
+          {% endif %}
+          <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="username">Email lub nazwa użytkownika <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="username" placeholder="Email lub username" name="username" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="password">Hasło <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="password" placeholder="Wpisz hasło" name="password" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="remember" name="remember">
+                    <label class="custom-control-label" for="remember">
+                      Zapamiętaj mnie
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <button type="submit" class="btn btn-fill btn-secondary btn-block">Zaloguj się</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="card-footer text-center">
+          <p class="text-center mt-3">Nie masz konta? <a href="#">Zarejestruj się</a></p>
+        </div>
+      </div>
+   
+{% endblock content %}

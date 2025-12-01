@@ -1,104 +1,97 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-absolute navbar-transparent">
+<nav class="navbar navbar-expand-lg navbar-absolute navbar-transparent fixed-top" 
+     style="background: linear-gradient(135deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.98) 100%); 
+            backdrop-filter: blur(10px); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+            z-index: 1030;">
     <div class="container-fluid">
-        <div class="navbar-wrapper">
+        <div class="navbar-wrapper mx-auto">
             <div class="navbar-toggle d-inline">
-                <button type="button" class="navbar-toggler">
-                    <span class="navbar-toggler-bar bar1"></span>
-                    <span class="navbar-toggler-bar bar2"></span>
-                    <span class="navbar-toggler-bar bar3"></span>
+                <button type="button" class="navbar-toggler" style="border: none;">
+                    <span class="navbar-toggler-bar bar1" style="background: #fff;"></span>
+                    <span class="navbar-toggler-bar bar2" style="background: #fff;"></span>
+                    <span class="navbar-toggler-bar bar3" style="background: #fff;"></span>
                 </button>
             </div>
-            <a class="navbar-brand" href="javascript:void(0)">{{segment}}</a>
+            <a class="navbar-brand text-white font-weight-bold" href="javascript:void(0)">{{ segment }}</a>
         </div>
+        
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation"
-            aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-bar navbar-kebab"></span>
-            <span class="navbar-toggler-bar navbar-kebab"></span>
-            <span class="navbar-toggler-bar navbar-kebab"></span>
+            aria-expanded="false" aria-label="Toggle navigation" style="border: none;">
+            <span class="navbar-toggler-bar navbar-kebab" style="background: #fff;"></span>
+            <span class="navbar-toggler-bar navbar-kebab" style="background: #fff;"></span>
+            <span class="navbar-toggler-bar navbar-kebab" style="background: #fff;"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navigation">
-            <ul class="navbar-nav ml-auto">
-                <li class="input-group d-flex align-items-center mb-0">
-                    <label class="switch theme-switch">
-                        <input type="checkbox" class="bsc" checked="">
-                        <span class="slider"></span>
-                    </label>
-                </li>
-                <li class="search-bar input-group">
-                    <button class="btn btn-link" id="search-button" data-toggle="modal" data-target="#searchModal"><i
-                            class="tim-icons icon-zoom-split"></i>
-                        <span class="d-lg-none d-md-block">Search</span>
-                    </button>
-                </li>
-                <li class="dropdown nav-item">
-                    <a href="javascript:void(0)" class="dropdown-toggle nav-link" data-toggle="dropdown">
-                        <div class="notification d-none d-lg-block d-xl-block"></div>
-                        <i class="tim-icons icon-sound-wave"></i>
-                        <p class="d-lg-none">
-                            Notifications
-                        </p>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-right dropdown-navbar">
-                        <li class="nav-link"><a href="#" class="nav-item dropdown-item">Mike John responded to
-                                your email</a></li>
-                        <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">You
-                                have 5 more tasks</a></li>
-                        <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Your
-                                friend Michael is in town</a></li>
-                        <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Another
-                                notification</a></li>
-                        <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Another
-                                one</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown nav-item">
-                    <a href="{% url 'admin:logout' %}" class="dropdown-toggle nav-link" data-toggle="dropdown">
-                        <div class="photo">
-                            <img src="{% static 'assets/img/anime3.png' %}" alt="Profile Photo">
-                        </div>
-                        <b class="caret d-none d-lg-block d-xl-block"></b>
-                        <p class="d-lg-none">
-                            Log out
-                        </p>
-                    </a>
-                    <ul class="dropdown-menu dropdown-navbar">
-                        <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Profile</a>
-                        </li>
-                        <li class="nav-link"><a href="javascript:void(0)" class="nav-item dropdown-item">Settings</a>
-                        </li>
-                        <li class="dropdown-divider"></li>
-                        {% if request.user.is_authenticated %}
-                        {% if request.user.is_superuser %}
-                        <li class="nav-link"><a href="{% url 'admin:password_change' %}" class="dropdown-item">
-                                Change Password</a></li>
-                        <li class="nav-link"><a href="{% url 'admin:logout' %}" class="nav-item dropdown-item">Log
-                                out</a></li>
-                        {% else %}
 
-                        <li><a href="{% url 'password_change' %}" class="dropdown-item">
-                                <i class="feather icon-lock"></i> Change Password</a></li>
-                        <li><a href="{% url 'logout' %}" class="dropdown-item"><i class="feather icon-lock"></i>
-                                Logout</a></li>
-                        {% endif %}
-                        {% endif %}
-                    </ul>
+        <div class="collapse navbar-collapse" id="navigation">
+            <!-- Centered main menu -->
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item {% if segment == 'home' %}active{% endif %}">
+                    <a class="nav-link text-white px-4 py-2 rounded-pill mx-2" 
+                       href="{% url 'index' %}"
+                       style="{% if segment == 'home' %}background: rgba(255,193,7,0.2); color: #ffd700;{% endif %}">
+                        <i class="tim-icons icon-home-50 mr-1"></i>Strona główna
+                    </a>
                 </li>
-                <li class="separator d-lg-none"></li>
+                <li class="nav-item {% if segment == 'propose' %}active{% endif %}">
+                    <a class="nav-link text-white px-4 py-2 rounded-pill mx-2" 
+                       href="{% url 'propose' %}"
+                       style="{% if segment == 'propose' %}background: rgba(40,167,69,0.2); color: #28a745;{% endif %}">
+                        <i class="tim-icons icon-tap-01 mr-1"></i>Zaproponuj film
+                    </a>
+                </li>
+                <li class="nav-item {% if segment == 'vote' %}active{% endif %}">
+                    <a class="nav-link text-white px-4 py-2 rounded-pill mx-2" 
+                       href="{% url 'vote' %}"
+                       style="{% if segment == 'vote' %}background: rgba(0,123,255,0.2); color: #007bff;{% endif %}">
+                        <i class="tim-icons"></i>Głosuj na filmy
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Right side user menu -->
+            <ul class="navbar-nav ml-auto">
+                {% if request.user.is_authenticated %}
+                <li class="nav-item mr-3">
+                    <p class="nav-link text-white mb-0 font-weight-500">
+                        <i class="tim-icons icon-single-02 mr-1"></i>Cześć, {{ request.user.username }}!
+                    </p>
+                </li>
+                {% endif %}
+
+                <li class="dropdown nav-item">
+                    {% if request.user.is_authenticated %}
+                    <a href="javascript:void(0)" class="dropdown-toggle nav-link p-0" data-toggle="dropdown">
+                        <div class="photo" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
+                            <img src="{% static 'assets/img/profile_pic.png' %}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <b class="caret d-none d-lg-block" style="border-top-color: #fff;"></b>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <li class="nav-link px-3 py-2"><a href="javascript:void(0)" class="nav-item dropdown-item font-weight-500">Profil: <strong>{{ request.user.username }}</strong></a></li>
+                        <li class="nav-link px-3 py-2"><a href="{% url 'propose' %}" class="nav-item dropdown-item">Zaproponuj film</a></li>
+                        <li class="nav-link px-3 py-2"><a href="{% url 'vote' %}" class="nav-item dropdown-item">Głosuj na filmy</a></li>
+                        {% if request.user.username == 'admin' %}
+                        <li class="nav-link px-3 py-2"><a href="{% url 'admin' %}" class="nav-item dropdown-item text-danger">⚙️ Zarządzanie użytkownikami</a></li>
+                        {% endif %}
+                        <li class="dropdown-divider"></li>
+                        <li class="nav-link px-3 py-2"><a href="{% url 'logout' %}" class="nav-item dropdown-item text-danger">Wyloguj się</a></li>
+                    </ul>
+                    {% else %}
+                    <a href="{% url 'auth_signin' %}" class="nav-link px-3 py-2 rounded-pill" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="tim-icons icon-lock-open mr-1"></i>Zaloguj się
+                    </a>
+                    {% endif %}
+                </li>
+                {% if not request.user.is_authenticated %}
+                <li class="nav-item ml-2">
+                    <a href="{% url 'auth_signup' %}" class="nav-link px-3 py-2 rounded-pill" style="background: rgba(40,167,69,0.2); color: #28a745; border: 1px solid rgba(40,167,69,0.3);">
+                        <i class="tim-icons icon-simple-add mr-1"></i>Zarejestruj się
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>
 </nav>
-<div class="modal modal-search fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModal"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="SEARCH">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <i class="tim-icons icon-simple-remove"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>

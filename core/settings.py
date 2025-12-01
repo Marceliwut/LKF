@@ -172,7 +172,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/auth-signin/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# IMDb API Configuration
+OMDB_API_KEY = os.environ.get('OMDB_API_KEY', None)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
