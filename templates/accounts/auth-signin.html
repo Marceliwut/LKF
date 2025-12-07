@@ -70,12 +70,12 @@
                                                 {% elif field.name in 'password password1 password2' %}
                                                     <label>Hasło</label>
                                                     {{ field }}
-                                                {% elif field.name == 'first_name' %}
+                                                {% comment %} {% elif field.name == 'first_name' %}
                                                     <label>Imię</label>
                                                     {{ field }}
                                                 {% elif field.name == 'last_name' %}
                                                     <label>Nazwisko</label>
-                                                    {{ field }}
+                                                    {{ field }} {% endcomment %}
                                                 {% else %}
                                                     <label>{{ field.label }}</label>
                                                     {{ field }}
