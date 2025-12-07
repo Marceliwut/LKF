@@ -1,0 +1,91 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<script>
+function clearAllLogs() {
+  if (confirm('Na pewno usunąć WSZYSTKIE logi? Ta akcja jest nieodwracalna.')) {
+    fetch('/admin/logs/clear/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('Błąd: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Błąd komunikacji z serwerem.');
+    });
+  }
+}
+</script>
+
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Logi aktywności ({{ log_count }} wpisów)</h5>
+          <a href="/vote/" class="btn btn-secondary btn-sm">← Powrót do głosowania</a>
+          <div class="card-header">
+  <h5>Logi aktywności ({{ log_count }} wpisów)</h5>
+  <div>
+    <a href="/vote/" class="btn btn-secondary btn-sm mr-2">← Powrót do głosowania</a>
+    {% if log_count > 0 %}
+    <button type="button" 
+            class="btn " 
+            onclick="clearAllLogs()">
+      Usuń wszystkie ({{ log_count }})
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>Data</th>
+                  <th>Użytkownik</th>
+                  <th>Akcja</th>
+                  <th>Propozycja ID</th>
+                  <th>Tytuł</th>
+                  <th>Szczegóły</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for log in logs %}
+                <tr>
+                  <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                  <td>{{ log.user.username|default:"Anonim" }}</td>
+                  <td>
+                    <span class="badge badge-{% if log.action == 'vote_add' %}success{% elif log.action == 'vote_remove' %}warning{% elif log.action == 'proposal_delete' %}danger{% elif log.action == 'movie_mark_watched' %}info{% else %}primary{% endif %}">
+                      {{ log.get_action_display }}
+                    </span>
+                  </td>
+                  <td>{{ log.proposal_id|default:"-" }}</td>
+                  <td>{{ log.proposal_title|truncatechars:30 }}</td>
+                  <td>{{ log.details|truncatechars:50 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">Brak logów</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

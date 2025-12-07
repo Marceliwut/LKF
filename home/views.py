@@ -14,7 +14,42 @@ import re
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
 from .forms import CustomLoginForm, CustomSignupForm, AdminResetPasswordForm, MovieProposalForm
-from .models import MovieProposal, ProposalVote
+from .models import MovieProposal, ProposalVote, LogEntry
+from django.views.decorators.http import require_POST
+
+@csrf_exempt
+@require_POST
+def clear_logs(request):
+    """Admin: delete all log entries."""
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
+    
+    try:
+        from .models import LogEntry
+        count = LogEntry.objects.count()
+        LogEntry.objects.all().delete()
+        log_action(request, 'clear_logs', details=f'Usunięto {count} logów')  # log samego czyszczenia
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'Usunięto {count} logów.'
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+
+
+
+def log_action(request, action, proposal_id=None, proposal_title='', details=''):
+    """Log user action to database."""
+    from .models import LogEntry
+    LogEntry.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        action=action,
+        proposal_id=proposal_id,
+        proposal_title=proposal_title,
+        details=details
+    )
+
+
 
 # Define the path for the CSV file
 from django.conf import settings
@@ -314,34 +349,39 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             auth_login(request, user)
+            log_action(request, 'login')
             return redirect('home')  # Redirect to home
+            
+        
     return render(request, 'pages/login.html')
 
 
 def auth_signin(request):
-    """Authentication view that uses CustomLoginForm and renders the admin_black signin template."""
     if request.method == 'POST':
         form = CustomLoginForm(request=request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
+            log_action(request, 'login')  # ← DODAJ
             return redirect('index')
     else:
         form = CustomLoginForm(request=request)
     return render(request, 'accounts/auth-signin.html', {'form': form})
 
 
+
 def auth_signup(request):
-    """Signup view that uses CustomSignupForm and renders the admin_black signup template."""
     if request.method == 'POST':
         form = CustomSignupForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
+            log_action(request, 'register')  # ← DODAJ
             return redirect('index')
     else:
         form = CustomSignupForm()
     return render(request, 'accounts/auth-signup.html', {'form': form})
+
 
 
 
@@ -622,6 +662,7 @@ def register_view(request):
         
         # Log the user in automatically
         auth_login(request, user)
+        log_action(request, 'register') 
         return render(request, 'pages/dashboard.html')
     
     return render(request, 'pages/register.html')
@@ -726,6 +767,10 @@ def propose_movie(request):
             # Create new proposal
             MovieProposal.objects.create(title=title, imdb_id=imdb_id, proposer=request.user)
             message = f"Film '{title}' został zaproponowany!"
+            
+            log_action(request, 'proposal_create', proposal_title=title)
+
+
             return render(request, 'pages/propose.html', {'form': MovieProposalForm(), 'message': message, 'success': True})
     else:
         form = MovieProposalForm()
@@ -869,27 +914,23 @@ def vote_page(request):
 
 
 def vote_proposal(request, proposal_id):
-    """Handle voting on a proposal (AJAX)."""
     if not request.user.is_authenticated:
         return JsonResponse({'status': 'error', 'message': 'Musisz się zalogować, aby głosować.'})
     
     try:
         proposal = MovieProposal.objects.get(id=proposal_id)
-        
-        # Check if user already voted
         vote = ProposalVote.objects.filter(proposal=proposal, voter=request.user).first()
+        
         if vote:
-            # Remove vote
             vote.delete()
-            action = 'removed'
+            action = 'vote_remove'
+            log_action(request, 'vote_remove', proposal.id, proposal.title)
         else:
-            # Add vote
             ProposalVote.objects.create(proposal=proposal, voter=request.user)
-            action = 'added'
+            action = 'vote_add'
+            log_action(request, 'vote_add', proposal.id, proposal.title)
         
-        # Get updated vote count
         vote_count = ProposalVote.objects.filter(proposal=proposal).count()
-        
         return JsonResponse({
             'status': 'success',
             'message': f'Głos {action}.',
@@ -898,12 +939,9 @@ def vote_proposal(request, proposal_id):
         })
     except MovieProposal.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Propozycja nie znaleziona.'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
 
-
+@csrf_exempt
 def delete_proposal(request, proposal_id):
-    """Admin function to delete a movie proposal."""
     if not request.user.is_authenticated or request.user.username != 'admin':
         return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
     
@@ -911,8 +949,118 @@ def delete_proposal(request, proposal_id):
         proposal = MovieProposal.objects.get(id=proposal_id)
         title = proposal.title
         proposal.delete()
+        log_action(request, 'proposal_delete', proposal_id, title)
         return JsonResponse({'status': 'success', 'message': f'Propozycja "{title}" została usunięta.'})
     except MovieProposal.DoesNotExist:
+        return JsonResponse({'status': 'success', 'message': 'Propozycja już nie istnieje.'})
+
+    
+
+@require_POST
+def mark_watched(request, proposal_id):
+    """Admin function: mark movie from proposal as watched in CSV; if not found, add new row."""
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
+
+    try:
+        proposal = MovieProposal.objects.get(id=proposal_id)
+    except MovieProposal.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Propozycja nie znaleziona.'})
+
+    title = (proposal.title or '').strip()
+    title_lower = title.lower()
+
+    csv_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+    if not os.path.exists(csv_path):
+        return JsonResponse({'status': 'error', 'message': 'Plik CSV nie istnieje.'})
+
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            rows = list(reader)
+
+        if not rows:
+            header = ["Number", "Title", "Year", "Duration", "Age Rating", "Rating",
+                      "Votes", "Metascore", "Description", "Watched", "Skipped",
+                      "Series", "Poster URL"]
+            data_rows = []
+        else:
+            header = rows[0]
+            data_rows = rows[1:]
+
+        watched_idx = 9
+        skipped_idx = 10
+
+        updated = False
+        max_number = 0
+
+        # szukaj istniejącego filmu
+        for row in data_rows:
+            if len(row) == 0:
+                continue
+
+            try:
+                num = int(row[0])
+                if num > max_number:
+                    max_number = num
+            except (ValueError, IndexError):
+                pass
+
+            if len(row) <= max(watched_idx, skipped_idx):
+                continue
+
+            row_title = (row[1] or '').strip().lower()
+
+            if row_title == title_lower:
+                row[watched_idx] = 'TRUE'
+                if len(row) > skipped_idx:
+                    row[skipped_idx] = 'FALSE'
+                updated = True
+                break
+
+        delete_proposal = False  # flaga czy usuwać propozycję
+
+        if not updated:
+            # DODAJ NOWY wiersz do CSV
+            new_number = max_number + 1
+            year = ''
+            description = ''
+            duration = ''
+
+            new_row = [
+                str(new_number), title, year, duration, '-', '-', '-', '-', description,
+                'TRUE', 'FALSE', 'FALSE', ''
+            ]
+            data_rows.append(new_row)
+            delete_proposal = True  # usuń propozycję po dodaniu nowego filmu
+        # else: film już istnieje w CSV - tylko zaktualizowano Watched, propozycja zostaje
+
+        # zapisz CSV
+        with open(csv_path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            writer.writerows(data_rows)
+
+        # usuń propozycję TYLKO gdy dodaliśmy nowy film do CSV
+        if delete_proposal:
+            proposal.delete()
+            msg = f'Film "{title}" dodany do CSV i oznaczony jako obejrzany. Usunięto z propozycji.'
+        else:
+            msg = f'Film "{title}" oznaczony jako obejrzany w CSV.'
+        log_action(request, 'movie_mark_watched', proposal_id, proposal.title, 
+           f"Updated: {updated}, Added new: {not updated}")
+        return JsonResponse({'status': 'success', 'message': msg})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+
+def admin_logs(request):
+    """Admin page to view all logs."""
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return redirect('vote_page')  # lub dashboard
+    
+    logs = LogEntry.objects.all()[:1000]  # ostatnie 1000 wpisów
+    
+    return render(request, 'pages/admin_logs.html', {
+        'logs': logs,
+        'log_count': LogEntry.objects.count()
+    })

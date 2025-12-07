@@ -82,9 +82,16 @@
                                       onclick="toggleVote({{ proposal.id }})">
                                 {% if proposal.user_voted %}✓ Zagłosowałem{% else %}Głosuj{% endif %}
                               </button>
+
                               {% if is_admin %}
                                 <button type="button"
-                                        class="btn btn-sm btn-danger ml-2"
+                                        class="btn btn-sm ml-2 btn-outline-info"
+                                        onclick="markWatched({{ proposal.id }}, '{{ proposal.title }}')">
+                                  Oglądnięte
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm ml-2"
                                         onclick="deleteProposal({{ proposal.id }}, '{{ proposal.title }}')">
                                   Usuń
                                 </button>
@@ -98,7 +105,7 @@
                             <small class="text-muted">Głosy od:</small>
                             <div class="mt-1">
                               {% for voter in proposal.voters %}
-                                <span class="badge badge-light border mr-1 mb-1">{{ voter }}</span>
+                                <span class="badge border mr-1 mb-1">{{ voter }}</span>
                               {% endfor %}
                             </div>
                           </div>
@@ -158,6 +165,32 @@
   }
 
   {% if is_admin %}
+  function markWatched(proposalId, title) {
+  if (confirm(`Oznaczyć film "${title.replace(/"/g, '"')}" jako obejrzany?`)) {
+    fetch(`{% url 'mark_watched' 0 %}`.replace('0', proposalId), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('Błąd: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Błąd komunikacji z serwerem.');
+    });
+  }
+}
+
+
   function deleteProposal(proposalId, title) {
     if (confirm(`Czy na pewno chcesz usunąć propozycję "${title}"?`)) {
       fetch(`{% url 'delete_proposal' 0 %}`.replace('0', proposalId), {

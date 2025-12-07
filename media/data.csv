@@ -1,8 +1,8 @@
 Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched,Skipped,Series,Poster URL
 1,Skazani na Shawshank,1994,2h 22m,16,9.3,3M,82,"A banker forms a friendship in prison, maintaining his innocence and hope.",FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg
-2,Ojciec chrzestny,1972,2h 55m,15,9.2,2M,100,"Don Vito Corleone hands his empire to his youngest son, Michael.",FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg
+2,Ojciec chrzestny,1972,2h 55m,15,9.2,2M,100,"Don Vito Corleone hands his empire to his youngest son, Michael.",TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg
 3,Mroczny Rycerz,2008,2h 32m,12,9,2.9M,84,Batman and allies face Joker's chaos in Gotham.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg
-4,Lista Schindlera,1993,3h 15m,16,9,1.5M,95,Oskar Schindler's transformation during WWII in occupied Poland.,FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg
+4,Lista Schindlera,1993,3h 15m,16,9,1.5M,95,Oskar Schindler's transformation during WWII in occupied Poland.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg
 5,Władca Pierścieni: Powrót króla,2003,3h 21m,12,9,2M,94,Men battle Sauron to help Frodo and Sam destroy the One Ring.,FALSE,TRUE,FALSE,https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg
 6,Dwunastu gniewnych ludzi,1957,1h 36m,12,9,880K,97,A lone juror forces others to reevaluate evidence during a murder trial.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg
 7,Ojciec chrzestny II,1974,3h 22m,15,9,1.4M,90,Continuation of Corleone family's saga.,FALSE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg
@@ -98,3 +98,4 @@ Number,Title,Year,Duration,Age Rating,Rating,Votes,Metascore,Description,Watched
 98,Deszczowa piosenka,1952,1h 43m,12,8.3,264K,99,A silent film star transitions to talkies while falling for a chorus girl.,FALSE,TRUE,FALSE,https://image.tmdb.org/t/p/w500/w03EiJVHP8Un77boQeE7hg9DVdU.jpg
 99,Garsoniera,1960,2h 5m,-,8.3,200K,94,"An insurance clerk lets executives use his apartment, complicating his ambitions.",FALSE,TRUE,FALSE,https://image.tmdb.org/t/p/w500/hhSRt1KKfRT0yEhEtRW3qp31JFU.jpg
 100,Piętno śmierci,1952,2h 23m,12,-,-,-,A tragic story whose details were not provided in the context.,TRUE,FALSE,FALSE,https://image.tmdb.org/t/p/w500/dgNTS4EQDDVfkzJI5msKuHu2Ei3.jpg
+101,The Hangover,,,-,-,-,-,,TRUE,FALSE,FALSE,

@@ -23,6 +23,11 @@ urlpatterns = [
     path('vote/', vote_page, name='vote'),
     path('vote/<int:proposal_id>/', vote_proposal, name='vote_proposal'),
     path('delete_proposal/<int:proposal_id>/', delete_proposal, name='delete_proposal'),
+    path('proposals/<int:proposal_id>/watched/', mark_watched, name='mark_watched'),
+    path('admin/logs/', admin_logs, name='admin_logs'),
+    path('admin/logs/clear/', clear_logs, name='clear_logs')
+
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

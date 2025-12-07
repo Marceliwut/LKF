@@ -12941,14 +12941,14 @@ img {
     background: transparent !important;
 }
 .navbar.bg-white .navbar-nav .search-bar.input-group i {
-    color: #222a42;
+ 
 }
 .navbar.bg-white .navbar-nav .search-bar.input-group .form-control {
-    background: #222a421a;
+
     border-radius: 4px;
 }
 .navbar.bg-white .navbar-nav a.nav-link {
-    color: #222a42 !important;
+   
 }
 .navbar.bg-white .navbar-nav a.nav-link p,
 .navbar.bg-white .navbar-text,
@@ -12956,10 +12956,10 @@ img {
     color: #222a42;
 }
 .navbar.bg-white .form-control {
-    color: #222a42 !important;
+  
 }
 .navbar.bg-white .form-control::placeholder {
-    color: #9a9a9a !important;
+  
 }
 .navbar.bg-dark {
     background: #222a42 !important;

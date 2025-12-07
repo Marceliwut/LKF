@@ -1,50 +1,32 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-absolute navbar-transparent fixed-top" 
-     style="background: linear-gradient(135deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.98) 100%); 
-            backdrop-filter: blur(10px); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
-            z-index: 1030;">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark text-white"
     <div class="container-fluid">
         <div class="navbar-wrapper mx-auto">
-            <div class="navbar-toggle d-inline">
-                <button type="button" class="navbar-toggler" style="border: none;">
-                    <span class="navbar-toggler-bar bar1" style="background: #fff;"></span>
-                    <span class="navbar-toggler-bar bar2" style="background: #fff;"></span>
-                    <span class="navbar-toggler-bar bar3" style="background: #fff;"></span>
-                </button>
-            </div>
-            <a class="navbar-brand text-white font-weight-bold" href="javascript:void(0)">{{ segment }}</a>
+            <a class="navbar-brand font-weight-bold" href="javascript:void(0)">{{ segment }}</a>
         </div>
         
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation"
             aria-expanded="false" aria-label="Toggle navigation" style="border: none;">
-            <span class="navbar-toggler-bar navbar-kebab" style="background: #fff;"></span>
-            <span class="navbar-toggler-bar navbar-kebab" style="background: #fff;"></span>
-            <span class="navbar-toggler-bar navbar-kebab" style="background: #fff;"></span>
+            <span class="navbar-toggler-bar bar1"></span>
+            <span class="navbar-toggler-bar bar2"></span>
+            <span class="navbar-toggler-bar bar3"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navigation">
             <!-- Centered main menu -->
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item {% if segment == 'home' %}active{% endif %}">
-                    <a class="nav-link text-white px-4 py-2 rounded-pill mx-2" 
-                       href="{% url 'index' %}"
-                       style="{% if segment == 'home' %}background: rgba(255,193,7,0.2); color: #ffd700;{% endif %}">
+                    <a class="nav-link text-light" href="{% url 'index' %}">
                         <i class="tim-icons icon-home-50 mr-1"></i>Strona główna
                     </a>
                 </li>
                 <li class="nav-item {% if segment == 'propose' %}active{% endif %}">
-                    <a class="nav-link text-white px-4 py-2 rounded-pill mx-2" 
-                       href="{% url 'propose' %}"
-                       style="{% if segment == 'propose' %}background: rgba(40,167,69,0.2); color: #28a745;{% endif %}">
+                    <a class="nav-link text-light" href="{% url 'propose' %}">
                         <i class="tim-icons icon-tap-01 mr-1"></i>Zaproponuj film
                     </a>
                 </li>
                 <li class="nav-item {% if segment == 'vote' %}active{% endif %}">
-                    <a class="nav-link text-white px-4 py-2 rounded-pill mx-2" 
-                       href="{% url 'vote' %}"
-                       style="{% if segment == 'vote' %}background: rgba(0,123,255,0.2); color: #007bff;{% endif %}">
+                    <a class="nav-link text-light" href="{% url 'vote' %}">
                         <i class="tim-icons"></i>Głosuj na filmy
                     </a>
                 </li>
@@ -54,7 +36,7 @@
             <ul class="navbar-nav ml-auto">
                 {% if request.user.is_authenticated %}
                 <li class="nav-item mr-3">
-                    <p class="nav-link text-white mb-0 font-weight-500">
+                    <p class="nav-link mb-0 font-weight-500 text-light">
                         <i class="tim-icons icon-single-02 mr-1"></i>Cześć, {{ request.user.username }}!
                     </p>
                 </li>
@@ -62,13 +44,13 @@
 
                 <li class="dropdown nav-item">
                     {% if request.user.is_authenticated %}
-                    <a href="javascript:void(0)" class="dropdown-toggle nav-link p-0" data-toggle="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle nav-link p-0 text-light" data-toggle="dropdown">
                         <div class="photo" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
                             <img src="{% static 'assets/img/profile_pic.png' %}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        <b class="caret d-none d-lg-block" style="border-top-color: #fff;"></b>
+                        <b class="caret d-none d-lg-block"></b>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    <ul class="dropdown-menu dropdown-menu-right bg-dark">
                         <li class="nav-link px-3 py-2"><a href="javascript:void(0)" class="nav-item dropdown-item font-weight-500">Profil: <strong>{{ request.user.username }}</strong></a></li>
                         <li class="nav-link px-3 py-2"><a href="{% url 'propose' %}" class="nav-item dropdown-item">Zaproponuj film</a></li>
                         <li class="nav-link px-3 py-2"><a href="{% url 'vote' %}" class="nav-item dropdown-item">Głosuj na filmy</a></li>
@@ -79,14 +61,14 @@
                         <li class="nav-link px-3 py-2"><a href="{% url 'logout' %}" class="nav-item dropdown-item text-danger">Wyloguj się</a></li>
                     </ul>
                     {% else %}
-                    <a href="{% url 'auth_signin' %}" class="nav-link px-3 py-2 rounded-pill" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                    <a href="{% url 'auth_signin' %}" class="nav-link px-3 py-2 text-light">
                         <i class="tim-icons icon-lock-open mr-1"></i>Zaloguj się
                     </a>
                     {% endif %}
                 </li>
                 {% if not request.user.is_authenticated %}
                 <li class="nav-item ml-2">
-                    <a href="{% url 'auth_signup' %}" class="nav-link px-3 py-2 rounded-pill" style="background: rgba(40,167,69,0.2); color: #28a745; border: 1px solid rgba(40,167,69,0.3);">
+                    <a href="{% url 'auth_signup' %}" class="nav-link px-3 py-2 text-light">
                         <i class="tim-icons icon-simple-add mr-1"></i>Zarejestruj się
                     </a>
                 </li>
@@ -95,3 +77,5 @@
         </div>
     </div>
 </nav>
+
+
