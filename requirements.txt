@@ -16,3 +16,4 @@ urllib3==2.6.0
 whitenoise==6.11.0
 dj-database-url
 psycopg2-binary  # or psycopg
+dj-database-url

@@ -16,6 +16,8 @@ from django.contrib.auth import authenticate, login as auth_login
 from .forms import CustomLoginForm, CustomSignupForm, AdminResetPasswordForm, MovieProposalForm
 from .models import MovieProposal, ProposalVote, LogEntry
 from django.views.decorators.http import require_POST
+from django.http import FileResponse
+from django.conf import settings
 
 @csrf_exempt
 @require_POST
@@ -37,6 +39,11 @@ def clear_logs(request):
         return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
 
 
+
+
+def download_sqlite(request):
+    db_path = os.path.join(settings.BASE_DIR, 'db.sqlite3')
+    return FileResponse(open(db_path, 'rb'), as_attachment=True, filename='db.sqlite3')
 
 def log_action(request, action, proposal_id=None, proposal_title='', details=''):
     """Log user action to database."""
