@@ -55,6 +55,25 @@ class AdminResetPasswordForm(forms.Form):
         return cleaned_data
 
 
+class ChangePasswordForm(forms.Form):
+    current_password = forms.CharField(label='Bieżące hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Wpisz bieżące hasło', 'class': 'form-control'}))
+    new_password = forms.CharField(label='Nowe hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Wpisz nowe hasło', 'class': 'form-control'}))
+    confirm_password = forms.CharField(label='Potwierdź hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz nowe hasło', 'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('new_password')
+        confirm = cleaned_data.get('confirm_password')
+        
+        if password and confirm and password != confirm:
+            raise forms.ValidationError("Nowe hasła się nie zgadzają.")
+        
+        if password and len(password) < 8:
+            raise forms.ValidationError("Hasło musi mieć co najmniej 8 znaków.")
+        
+        return cleaned_data
+
+
 class MovieProposalForm(forms.Form):
     title = forms.CharField(
         label='Tytuł filmu',

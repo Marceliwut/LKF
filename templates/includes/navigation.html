@@ -30,6 +30,11 @@
                         <i class="tim-icons"></i>Głosuj na filmy
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="{% url 'vote' %}?filter=watched">
+                        Obejrzane
+                    </a>
+                </li>
             </ul>
 
             <!-- Right side user menu -->
@@ -54,6 +59,7 @@
                         <li class="nav-link px-3 py-2"><a href="javascript:void(0)" class="nav-item dropdown-item font-weight-500">Profil: <strong>{{ request.user.username }}</strong></a></li>
                         <li class="nav-link px-3 py-2"><a href="{% url 'propose' %}" class="nav-item dropdown-item">Zaproponuj film</a></li>
                         <li class="nav-link px-3 py-2"><a href="{% url 'vote' %}" class="nav-item dropdown-item">Głosuj na filmy</a></li>
+                        <li class="nav-link px-3 py-2"><a href="{% url 'change_password' %}" class="nav-item dropdown-item">Zmień hasło</a></li>
                         {% if request.user.username == 'admin' %}
                         <li class="nav-link px-3 py-2"><a href="{% url 'admin' %}" class="nav-item dropdown-item text-danger">⚙️ Zarządzanie użytkownikami</a></li>
                         {% endif %}

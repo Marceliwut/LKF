@@ -21,12 +21,13 @@
             <!-- Main Panel -->
             <div class="col-lg-8 col-md-10">
                 {% block content %}{% endblock content %}
-                {% block footer %}
-                {% include 'includes/footer.html' %}
-                {% endblock footer %}
             </div>
         </div>
     </div>
+
+    {% block footer %}
+    {% include 'includes/footer.html' %}
+    {% endblock footer %}
 
     {% include 'includes/scripts.html' %}
     {% block extrajs %}{% endblock extrajs %}

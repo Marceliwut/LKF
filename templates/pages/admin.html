@@ -44,6 +44,7 @@
                     <th>ID</th>
                     <th>Nazwa użytkownika</th>
                     <th>Email</th>
+                    <th>Limit propozycji</th>
                     <th>Data dołączenia</th>
                     <th>Ostatnia aktywność</th>
                     <th>Akcje</th>
@@ -58,6 +59,7 @@
                       <td>{{ user.id }}</td>
                       <td>{{ user.username }}</td>
                       <td>{{ user.email }}</td>
+                      <td>{{ user.proposal_limit_value }}</td>
                       <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
                       <td>{{ user.last_login|date:"Y-m-d H:i" }}</td>
                       <td>
@@ -78,6 +80,9 @@
             <div class="card-footer">
               <button type="submit" id="remove-users-btn" class="btn btn-fill" name="action" value="delete" onclick="return confirm('Czy na pewno chcesz usunąć wybranych użytkowników?')" style="background-color: #ef8157 !important; color: white !important;">
                 Usuń wybranych użytkowników
+              </button>
+              <button type="button" class="btn btn-fill" name="action" value="extend_limit" onclick="openExtendLimitModal()" style="background-color: #51bcda !important; color: white !important; margin-left: 10px;">
+                Rozszerz limit propozycji
               </button>
             </div>
           </form>
@@ -114,7 +119,93 @@
       closeAlert('successAlert');
     }, 5000);
   }
+
+  function openExtendLimitModal() {
+    var checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    if (checkboxes.length === 0) {
+      alert('Proszę wybrać co najmniej jednego użytkownika.');
+      return;
+    }
+    document.getElementById('extendLimitModal').style.display = 'block';
+  }
+
+  function submitExtendLimit() {
+    var additionalLimit = parseInt(document.getElementById('additionalLimit').value);
+    if (!additionalLimit || additionalLimit <= 0) {
+      alert('Proszę wpisać liczbę większą od 0.');
+      return;
+    }
+    
+    // Create hidden form and submit
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "admin" %}';
+    
+    // Add CSRF token
+    var csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    // Add action
+    var actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'extend_limit';
+    form.appendChild(actionInput);
+    
+    // Add additional limit
+    var limitInput = document.createElement('input');
+    limitInput.type = 'hidden';
+    limitInput.name = 'additional_limit';
+    limitInput.value = additionalLimit;
+    form.appendChild(limitInput);
+    
+    // Add selected user IDs
+    var checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    checkboxes.forEach(function(checkbox) {
+      var userIdInput = document.createElement('input');
+      userIdInput.type = 'hidden';
+      userIdInput.name = 'user_ids';
+      userIdInput.value = checkbox.value;
+      form.appendChild(userIdInput);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function closeModal() {
+    document.getElementById('extendLimitModal').style.display = 'none';
+    document.getElementById('additionalLimit').value = '';
+  }
+
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+    var modal = document.getElementById('extendLimitModal');
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  }
 </script>
+
+<!-- Extend Limit Modal -->
+<div id="extendLimitModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4);">
+  <div class="modal-content" style="background-color: #1a1a2e; color: #fff; margin: 10% auto; padding: 20px; border: 1px solid #333; border-radius: 5px; width: 400px;">
+    <span class="close" onclick="closeModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+    <h2 style="margin-top: 0;">Rozszerz limit propozycji</h2>
+    <p>Ile dodatkowych propozycji dodać do limitu wybranym użytkownikom?</p>
+    <div style="margin: 20px 0;">
+      <label for="additionalLimit" style="color: #fff; display: block; margin-bottom: 10px;">Liczba dodatkowych propozycji:</label>
+      <input type="number" id="additionalLimit" min="1" max="50" value="5" style="width: 100%; padding: 10px; background-color: #2a2a3e; color: #fff; border: 1px solid #333; border-radius: 4px; box-sizing: border-box;">
+    </div>
+    <div style="text-align: right; margin-top: 20px;">
+      <button onclick="closeModal()" style="padding: 10px 20px; margin-right: 10px; background-color: #555; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Anuluj</button>
+      <button onclick="submitExtendLimit()" style="padding: 10px 20px; background-color: #51bcda; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Rozszerz</button>
+    </div>
+  </div>
+</div>
 
 <!-- Password Reset Modal -->
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordLabel" aria-hidden="true">

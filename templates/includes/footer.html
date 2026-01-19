@@ -1,57 +1,30 @@
 <!-- filepath: c:\Users\mmirz\OneDrive\LKF\lkf\templates\includes\footer.html -->
-<footer class="footer" style="background-color:#27293d!important;">
+<footer class="footer" style="background-color:#27293d!important; width: 100%; margin: 0; padding: 20px;">
  
-        <p class="lead">
-            <strong>Stats:</strong> 
-            <br>
-            Oglądnięte: <span class="text-success">{{ watched_count }}</span>, 
-            Skipped: <span class="text-danger">{{ skipped_count }}</span>, 
-            Pozostało: <span class="text-info">{{ unwatched_count }}</span>
-        </p>
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 15px;">
+            <p class="lead">
+                <strong>Stats:</strong> 
+                <br>
+                Oglądnięte: <span class="text-success">{{ watched_count }}</span>, 
+                Skipped: <span class="text-danger">{{ skipped_count }}</span>, 
+                Pozostało: <span class="text-info">{{ unwatched_count }}</span>
+            </p>
 
-    <p>
-        <a href="file_explorer/">Zarządzanie backupami tutaj</a>
-    </p>
-    <!-- Re-download Button -->
+            <p>
+                <a href="file_explorer/">Zarządzanie backupami tutaj</a>
+            </p>
+            <!-- Re-download Button -->
 
-    <div class="copyright">
-        <a href="" target="_blank">@Wonziutki</a> - LKF - Sekcja Młodego Kurosawy.
-    </div>
+            <div class="copyright">
+                <a href="" target="_blank">@Wonziutki</a> - LKF - Sekcja Młodego Kurosawy.
+            </div>
 
-
-<!-- Scroll to Bottom Button -->
-<button id="scrollToBottomBtn" class="scroll-to-bottom-btn">
-    <i class="fa fa-arrow-down"></i>
-</button>
-
-<!-- Scroll to Top Button -->
-<button id="scrollToTopBtn" class="scroll-to-top-btn">
-    <i class="fa fa-arrow-up"></i>
-</button>
-
-<script>
-    // Scroll to Bottom Button Functionality
-    document.getElementById('scrollToBottomBtn').addEventListener('click', function () {
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-        });
-    });
-
-    // Scroll to Top Button Functionality
-    document.getElementById('scrollToTopBtn').addEventListener('click', function () {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-</script>
-
-<div class="text-center mb-4">
-    <button id="update-posters-btn" class="btn btn-primary">
-        <i class="fa fa-refresh"></i> Force Update Posters
-    </button>
-</div>
+            <div class="text-center mb-4">
+                <button id="update-posters-btn" class="btn btn-primary">
+                    <i class="fa fa-refresh"></i> Force Update Posters
+                </button>
+            </div>
+        </div>
 
 <script>
     document.getElementById("update-posters-btn").addEventListener("click", function () {
@@ -97,6 +70,34 @@
         }
         return cookieValue;
     }
+</script>
+
+<!-- Scroll to Bottom Button -->
+<button id="scrollToBottomBtn" class="scroll-to-bottom-btn">
+    <i class="fa fa-arrow-down"></i>
+</button>
+
+<!-- Scroll to Top Button -->
+<button id="scrollToTopBtn" class="scroll-to-top-btn">
+    <i class="fa fa-arrow-up"></i>
+</button>
+
+<script>
+    // Scroll to Bottom Button Functionality
+    document.getElementById('scrollToBottomBtn').addEventListener('click', function () {
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
+
+    // Scroll to Top Button Functionality
+    document.getElementById('scrollToTopBtn').addEventListener('click', function () {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 </script>
 
 <style>

@@ -14,6 +14,7 @@ class LogEntry(models.Model):
     ('register', 'Rejestracja'),      # ← NOWE
     ('logout', 'Wylogowanie'),        # ← NOWE
     ('clear_logs', 'Wyczyszczono logi'),
+    ('password_changed', 'Zmieniono hasło'),
 ]
 
     
@@ -69,3 +70,29 @@ class ProposalVote(models.Model):
     
     def __str__(self):
         return f"{self.voter.username} voted for {self.proposal.title}"
+
+
+class MovieRating(models.Model):
+    movie_title = models.CharField(max_length=255)  # Movie title from CSV
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='movie_ratings')
+    rating = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('movie_title', 'user')  # One rating per user per movie
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} rated '{self.movie_title}' {self.rating}/5"
+
+
+class UserProposalLimit(models.Model):
+    """Store custom proposal limits for users. Default is 10 if not present."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='proposal_limit')
+    limit = models.IntegerField(default=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - Limit: {self.limit}"

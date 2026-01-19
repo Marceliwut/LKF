@@ -13,8 +13,8 @@ from django.conf import settings
 import re
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
-from .forms import CustomLoginForm, CustomSignupForm, AdminResetPasswordForm, MovieProposalForm
-from .models import MovieProposal, ProposalVote, LogEntry
+from .forms import CustomLoginForm, CustomSignupForm, AdminResetPasswordForm, ChangePasswordForm, MovieProposalForm
+from .models import MovieProposal, ProposalVote, LogEntry, MovieRating
 from django.views.decorators.http import require_POST
 from django.http import FileResponse
 from django.conf import settings
@@ -129,73 +129,8 @@ def update_posters(request):
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 
 def index(request):
-    csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-    filter_by = request.GET.get('filter', 'not_watched')
-    sort_by = request.GET.get('sort')
-    search_query = request.GET.get('search', '').strip().lower()  # Get the search query
-    
-    # Initialize statistics
-    watched_count = skipped_count = unwatched_count = 0
-    total_duration_minutes = 0
-    updated_rows = []
-    header = []  # Initialize header to avoid UnboundLocalError
-
-    if os.path.exists(csv_file_path):
-        with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
-            rows = list(reader)
-
-            if len(rows) > 1:  # Ensure there are rows beyond the header
-                header, data = rows[0], rows[1:]
-
-                # Update statistics
-                watched_count = sum(1 for row in data if len(row) > 9 and row[9] == 'TRUE')
-                skipped_count = sum(1 for row in data if len(row) > 10 and row[10] == 'TRUE')
-                unwatched_count = sum(1 for row in data if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE')
-                total_duration_minutes = sum(
-                    parse_duration(row[3]) for row in data if len(row) > 3
-                )
-
-                # Apply filters
-                if filter_by == 'watched':
-                    updated_rows = [row for row in data if len(row) > 9 and row[9] == 'TRUE']
-                elif filter_by == 'skipped':
-                    updated_rows = [row for row in data if len(row) > 10 and row[10] == 'TRUE']
-                elif filter_by == 'not_watched':
-                    updated_rows = [row for row in data if len(row) > 10 and row[9] != 'TRUE' and row[10] != 'TRUE']
-                else:
-                    updated_rows = data
-
-                # Apply search filter
-                if search_query:
-                    updated_rows = [row for row in updated_rows if search_query in row[1].lower()]
-
-                # Apply sorting
-                if not sort_by:
-                    sort_by = 'desc' if filter_by == 'not_watched' else 'asc'
-
-                if sort_by == 'asc':
-                    updated_rows = sorted(updated_rows, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
-                elif sort_by == 'desc':
-                    updated_rows = sorted(updated_rows, key=lambda x: int(x[0]) if x[0].isdigit() else 0, reverse=True)
-            else:
-                # If the CSV file is empty or invalid, initialize header and updated_rows
-                header = ["Number", "Title", "Year", "Duration", "Age Rating", "Rating", "Votes", "Metascore", "Description", "Watched", "Skipped", "Series", "Poster URL"]
-                updated_rows = []
-
-    # Convert total duration to hours
-    total_duration_hours = total_duration_minutes // 60
-    total_duration_minutes_remainder = total_duration_minutes % 60
-
-    return render(request, 'pages/dashboard.html', {
-        'csv_data': [header] + updated_rows,
-        'watched_count': watched_count,
-        'skipped_count': skipped_count,
-        'unwatched_count': unwatched_count,
-        'total_duration_hours': total_duration_hours,
-        'total_duration_minutes_remainder': total_duration_minutes_remainder,
-        'search_query': search_query,  # Pass the search query to the template
-    })
+    """Redirect to vote page. Home page now shows movie proposals to vote on."""
+    return redirect('vote')
 
 def refresh_csv_data(request):
     try:
@@ -698,8 +633,42 @@ def admin_view(request):
                 error_message = f"Błąd przy usuwaniu użytkowników: {str(e)}"
                 users = User.objects.all()
                 return render(request, 'pages/admin.html', {'users': users, 'error': error_message})
+        
+        elif action == 'extend_limit' and user_ids:
+            try:
+                additional_limit = int(request.POST.get('additional_limit', 0))
+                if additional_limit <= 0:
+                    raise ValueError("Limit musi być większy od 0")
+                
+                from .models import UserProposalLimit
+                count = 0
+                for user_id in user_ids:
+                    user = User.objects.get(id=user_id)
+                    user_limit, created = UserProposalLimit.objects.get_or_create(user=user)
+                    user_limit.limit += additional_limit
+                    user_limit.save()
+                    log_action(request, 'extend_limit', details=f'Rozszerzono limit propozycji dla użytkownika {user.username} o {additional_limit}. Nowy limit: {user_limit.limit}')
+                    count += 1
+                
+                message = f"Rozszerzono limit propozycji dla {count} użytkownika(ów)"
+                users = User.objects.all()
+                return render(request, 'pages/admin.html', {'users': users, 'message': message})
+            except Exception as e:
+                error_message = f"Błąd przy rozszerzaniu limitu: {str(e)}"
+                users = User.objects.all()
+                return render(request, 'pages/admin.html', {'users': users, 'error': error_message})
     
     users = User.objects.all()
+    from .models import UserProposalLimit
+    # Attach proposal limit info to each user
+    for user in users:
+        try:
+            user.proposal_limit_value = UserProposalLimit.objects.get(user=user).limit
+        except UserProposalLimit.DoesNotExist:
+            user.proposal_limit_value = 10  # Default limit
+        except Exception:
+            user.proposal_limit_value = 10  # Default limit in case of any database error
+    
     return render(request, 'pages/admin.html', {'users': users})
 
 
@@ -754,10 +723,57 @@ def reset_user_password(request):
     return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})
 
 
-def propose_movie(request):
-    """Allow logged-in users to propose a movie."""
+def change_password(request):
+    """Allow users to change their own password."""
     if not request.user.is_authenticated:
         return redirect('auth_signin')
+    
+    if request.method == 'POST':
+        form = ChangePasswordForm(request.POST)
+        if form.is_valid():
+            user = request.user
+            current_password = form.cleaned_data.get('current_password')
+            new_password = form.cleaned_data.get('new_password')
+            
+            # Verify current password
+            if not user.check_password(current_password):
+                form.add_error('current_password', 'Bieżące hasło jest niepoprawne.')
+                return render(request, 'pages/change_password.html', {'form': form})
+            
+            # Set the new password
+            user.set_password(new_password)
+            user.save()
+            
+            # Log the action
+            log_action(request, 'password_changed', details='Użytkownik zmienił swoje hasło')
+            
+            # Show success message with countdown and redirect to login
+            return render(request, 'pages/change_password.html', {
+                'form': ChangePasswordForm(),
+                'success': True,
+                'message': 'Hasło zostało pomyślnie zmienione. Przesyłanie na stronę logowania...',
+                'show_countdown': True
+            })
+    else:
+        form = ChangePasswordForm()
+    
+    return render(request, 'pages/change_password.html', {'form': form})
+
+
+def propose_movie(request):
+    """Allow logged-in users to propose a movie. Max 10 active proposals per user (configurable by admin)."""
+    if not request.user.is_authenticated:
+        return redirect('auth_signin')
+    
+    # Get user's proposal limit
+    from .models import UserProposalLimit
+    user_limit = 10  # Default limit
+    try:
+        user_limit = UserProposalLimit.objects.get(user=request.user).limit
+    except UserProposalLimit.DoesNotExist:
+        user_limit = 10  # Default limit
+    except Exception:
+        user_limit = 10  # Default limit in case of database error
     
     if request.method == 'POST':
         form = MovieProposalForm(request.POST)
@@ -765,24 +781,32 @@ def propose_movie(request):
             title = form.cleaned_data['title']
             imdb_id = form.cleaned_data.get('imdb_id')
             
+            # Check user's active proposal count
+            user_proposal_count = MovieProposal.objects.filter(proposer=request.user).count()
+            if user_proposal_count >= user_limit:
+                message = f"Osiągnąłeś maksymalną liczbę aktywnych propozycji ({user_limit}). Usuń lub czekaj aż jedna z Twoich propozycji będzie oznaczona jako oglądnięta."
+                return render(request, 'pages/propose.html', {'form': form, 'message': message, 'proposal_limit': user_limit})
+            
             # Check if movie with this title already exists
             existing = MovieProposal.objects.filter(title__iexact=title).first()
             if existing:
                 message = f"Film '{title}' został już zaproponowany przez {existing.proposer.username}. Zagłosuj na niego zamiast tego!"
-                return render(request, 'pages/propose.html', {'form': form, 'message': message})
+                return render(request, 'pages/propose.html', {'form': form, 'message': message, 'proposal_limit': user_limit})
             
             # Create new proposal
             MovieProposal.objects.create(title=title, imdb_id=imdb_id, proposer=request.user)
-            message = f"Film '{title}' został zaproponowany!"
+            message = f"Film '{title}' został zaproponowany! (Aktywne: {user_proposal_count + 1}/{user_limit})"
             
             log_action(request, 'proposal_create', proposal_title=title)
 
-
-            return render(request, 'pages/propose.html', {'form': MovieProposalForm(), 'message': message, 'success': True})
+            return render(request, 'pages/propose.html', {'form': MovieProposalForm(), 'message': message, 'success': True, 'proposal_limit': user_limit})
     else:
         form = MovieProposalForm()
     
-    return render(request, 'pages/propose.html', {'form': form})
+    # Get user's current proposal count
+    user_proposal_count = MovieProposal.objects.filter(proposer=request.user).count() if request.user.is_authenticated else 0
+    
+    return render(request, 'pages/propose.html', {'form': form, 'proposal_count': user_proposal_count, 'proposal_limit': user_limit})
 
 
 def search_imdb(request):
@@ -857,10 +881,77 @@ from django.db.models import Count
 import requests
 
 def vote_page(request):
-    """Show all movie proposals sorted by votes."""
+    """Show all movie proposals sorted by votes, or watched movies if filter=watched."""
     from django.db.models import Count
     import requests
     
+    filter_type = request.GET.get('filter', 'proposals')
+    sort_by = request.GET.get('sort', 'date')  # 'date' or 'rating'
+    
+    # If filter is 'watched', show watched movies from CSV
+    if filter_type == 'watched':
+        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+        watched_movies = []
+        
+        if os.path.exists(csv_file_path):
+            with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                rows = list(reader)
+                
+                if len(rows) > 1:
+                    header, data = rows[0], rows[1:]
+                    # Filter for watched movies
+                    watched_data = [row for row in data if len(row) > 9 and row[9] == 'TRUE']
+                    
+                    # Enhance watched movies with poster data and average rating
+                    from .models import MovieRating
+                    for movie in watched_data:
+                        movie_title = movie[1] if len(movie) > 1 else ''
+                        movie_dict = {
+                            'number': movie[0] if len(movie) > 0 else '',
+                            'title': movie_title,
+                            'year': movie[2] if len(movie) > 2 else '',
+                            'duration': movie[3] if len(movie) > 3 else '',
+                            'age_rating': movie[4] if len(movie) > 4 else '',
+                            'rating': movie[5] if len(movie) > 5 else '',
+                            'votes': movie[6] if len(movie) > 6 else '',
+                            'metascore': movie[7] if len(movie) > 7 else '',
+                            'description': movie[8] if len(movie) > 8 else '',
+                            'poster_url': movie[12] if len(movie) > 12 else '',
+                        }
+                        
+                        # Get average user rating for this movie
+                        try:
+                            ratings = MovieRating.objects.filter(movie_title=movie_title).values_list('rating', flat=True)
+                            if ratings:
+                                movie_dict['user_avg_rating'] = sum(ratings) / len(ratings)
+                                movie_dict['user_rating_count'] = len(ratings)
+                            else:
+                                movie_dict['user_avg_rating'] = 0
+                                movie_dict['user_rating_count'] = 0
+                        except Exception:
+                            movie_dict['user_avg_rating'] = 0
+                            movie_dict['user_rating_count'] = 0
+                        
+                        watched_movies.append(movie_dict)
+                    
+                    # Sort by rating or date
+                    if sort_by == 'rating':
+                        watched_movies = sorted(watched_movies, key=lambda x: x['user_avg_rating'], reverse=True)
+                    else:
+                        # Sort by number descending (most recent first)
+                        watched_movies = sorted(watched_movies, key=lambda x: int(x['number']) if x['number'].isdigit() else 0, reverse=True)
+        
+        return render(request, 'pages/vote.html', {
+            'proposals': None,
+            'watched_movies': watched_movies,
+            'is_authenticated': request.user.is_authenticated,
+            'is_admin': request.user.is_authenticated and request.user.username == 'admin',
+            'filter_type': 'watched',
+            'sort_by': sort_by
+        })
+    
+    # Default: show proposals to vote on
     proposals = MovieProposal.objects.annotate(
         vote_count=Count('proposal_votes')
     ).order_by('-vote_count', '-created_at')
@@ -905,9 +996,11 @@ def vote_page(request):
             'id': p.id,
             'title': p.title,
             'proposer': p.proposer.username,
+            'proposer_id': p.proposer.id,
             'vote_count': p.vote_count,
             'created_at': p.created_at,
             'user_voted': p.id in user_votes,
+            'is_proposer': request.user.is_authenticated and request.user == p.proposer,
             'imdb_id': p.imdb_id,
             'imdb': imdb_data,
             'voters': voter_names,  # Add this line
@@ -915,8 +1008,10 @@ def vote_page(request):
     
     return render(request, 'pages/vote.html', {
         'proposals': proposals_with_votes,
+        'watched_movies': None,
         'is_authenticated': request.user.is_authenticated,
-        'is_admin': request.user.is_authenticated and request.user.username == 'admin'
+        'is_admin': request.user.is_authenticated and request.user.username == 'admin',
+        'filter_type': 'proposals'
     })
 
 
@@ -949,11 +1044,17 @@ def vote_proposal(request, proposal_id):
 
 @csrf_exempt
 def delete_proposal(request, proposal_id):
-    if not request.user.is_authenticated or request.user.username != 'admin':
+    """Delete a proposal. Only admin or the proposal creator can delete it."""
+    if not request.user.is_authenticated:
         return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
     
     try:
         proposal = MovieProposal.objects.get(id=proposal_id)
+        
+        # Check if user is admin or the proposer
+        if request.user.username != 'admin' and request.user != proposal.proposer:
+            return JsonResponse({'status': 'error', 'message': 'Możesz usunąć tylko swoje propozycje.'})
+        
         title = proposal.title
         proposal.delete()
         log_action(request, 'proposal_delete', proposal_id, title)
@@ -1053,12 +1154,135 @@ def mark_watched(request, proposal_id):
             proposal.delete()
             msg = f'Film "{title}" dodany do CSV i oznaczony jako obejrzany. Usunięto z propozycji.'
         else:
-            msg = f'Film "{title}" oznaczony jako obejrzany w CSV.'
+            # Film już istnieje w CSV - też usuń propozycję żeby zwolnić slot użytkownikowi
+            proposal.delete()
+            msg = f'Film "{title}" oznaczony jako obejrzany w CSV. Propozycja usunięta.'
         log_action(request, 'movie_mark_watched', proposal_id, proposal.title, 
            f"Updated: {updated}, Added new: {not updated}")
         return JsonResponse({'status': 'success', 'message': msg})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+
+
+
+@csrf_exempt
+def rate_movie(request):
+    """Handle movie rating submission."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Musisz się zalogować.'})
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            movie_title = data.get('movie_title')
+            rating = data.get('rating')
+            
+            if not movie_title or not rating:
+                return JsonResponse({'status': 'error', 'message': 'Brak wymaganych danych.'})
+            
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                return JsonResponse({'status': 'error', 'message': 'Ocena musi być od 1 do 5.'})
+            
+            # Create or update rating
+            from .models import MovieRating
+            movie_rating, created = MovieRating.objects.update_or_create(
+                movie_title=movie_title,
+                user=request.user,
+                defaults={'rating': rating}
+            )
+            
+            # Get all ratings for this movie
+            all_ratings = MovieRating.objects.filter(movie_title=movie_title).values_list('rating', flat=True)
+            avg_rating = sum(all_ratings) / len(all_ratings) if all_ratings else 0
+            
+            # Get ratings by user
+            ratings_by_user = MovieRating.objects.filter(movie_title=movie_title).values('user__username', 'rating').order_by('-created_at')
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Ocena zapisana.',
+                'average_rating': round(avg_rating * 2) / 2,  # Round to nearest 0.5
+                'rating_count': len(all_ratings),
+                'ratings_by_user': list(ratings_by_user)
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+    
+    return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})
+
+
+@csrf_exempt
+def get_movie_ratings(request):
+    """Get ratings for a specific movie."""
+    if request.method == 'GET':
+        movie_title = request.GET.get('movie_title')
+        
+        if not movie_title:
+            return JsonResponse({'status': 'error', 'message': 'Brak tytułu filmu.'})
+        
+        from .models import MovieRating
+        all_ratings = MovieRating.objects.filter(movie_title=movie_title).values_list('rating', flat=True)
+        avg_rating = sum(all_ratings) / len(all_ratings) if all_ratings else 0
+        
+        # Get ratings by user
+        ratings_by_user = MovieRating.objects.filter(movie_title=movie_title).values('user__username', 'rating').order_by('-created_at')
+        
+        # Get current user's rating if authenticated
+        user_rating = None
+        if request.user.is_authenticated:
+            rating_obj = MovieRating.objects.filter(movie_title=movie_title, user=request.user).first()
+            if rating_obj:
+                user_rating = rating_obj.rating
+        
+        return JsonResponse({
+            'status': 'success',
+            'average_rating': round(avg_rating * 2) / 2,
+            'rating_count': len(all_ratings),
+            'user_rating': user_rating,
+            'ratings_by_user': list(ratings_by_user)
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})
+
+
+@csrf_exempt
+def remove_movie_rating(request):
+    """Handle movie rating removal."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Musisz się zalogować.'})
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            movie_title = data.get('movie_title')
+            
+            if not movie_title:
+                return JsonResponse({'status': 'error', 'message': 'Brak tytułu filmu.'})
+            
+            # Delete user's rating
+            from .models import MovieRating
+            MovieRating.objects.filter(movie_title=movie_title, user=request.user).delete()
+            
+            # Get remaining ratings for this movie
+            all_ratings = MovieRating.objects.filter(movie_title=movie_title).values_list('rating', flat=True)
+            avg_rating = sum(all_ratings) / len(all_ratings) if all_ratings else 0
+            
+            # Get ratings by user
+            ratings_by_user = MovieRating.objects.filter(movie_title=movie_title).values('user__username', 'rating').order_by('-created_at')
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Ocena usunięta.',
+                'average_rating': round(avg_rating * 2) / 2 if all_ratings else 0,
+                'rating_count': len(all_ratings),
+                'ratings_by_user': list(ratings_by_user)
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+    
+    return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})
+
 
 def admin_logs(request):
     """Admin page to view all logs."""
@@ -1071,3 +1295,64 @@ def admin_logs(request):
         'logs': logs,
         'log_count': LogEntry.objects.count()
     })
+
+
+@csrf_exempt
+def remove_watched_movie(request):
+    """Admin: remove a movie from the watched list."""
+    if not request.user.is_authenticated or request.user.username != 'admin':
+        return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            movie_title = data.get('movie_title')
+            
+            if not movie_title:
+                return JsonResponse({'status': 'error', 'message': 'Brak tytułu filmu.'})
+            
+            csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+            
+            if not os.path.exists(csv_file_path):
+                return JsonResponse({'status': 'error', 'message': 'Plik CSV nie istnieje.'})
+            
+            # Read CSV
+            with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                rows = list(reader)
+            
+            if len(rows) < 2:
+                return JsonResponse({'status': 'error', 'message': 'Plik CSV jest pusty.'})
+            
+            # Find and remove the movie by setting watched column (index 9) to FALSE
+            header = rows[0]
+            data_rows = rows[1:]
+            movie_found = False
+            
+            for row in data_rows:
+                if len(row) > 1 and row[1].strip() == movie_title.strip():
+                    # Set watched flag (column 9) to FALSE
+                    if len(row) > 9:
+                        row[9] = 'FALSE'
+                    movie_found = True
+                    break
+            
+            if not movie_found:
+                return JsonResponse({'status': 'error', 'message': 'Film nie został znaleziony.'})
+            
+            # Write updated CSV
+            with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(header)
+                writer.writerows(data_rows)
+            
+            log_action(request, 'remove_watched_movie', details=f'Usunięto film ze złożonych: {movie_title}')
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Film "{movie_title}" został usunięty z listy obejrzanych.'
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
+    
+    return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})

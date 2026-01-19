@@ -8,6 +8,11 @@
         <div class="card-header">
           <h5 class="title">Zaproponuj film</h5>
           <p class="text-muted">Zaproponuj film na kolejne spotkanie</p>
+          {% if request.user.is_authenticated %}
+            <div class="alert alert-info mt-2 mb-0">
+              <small>Aktywne propozycje: <strong>{{ proposal_count }}/{{ proposal_limit }}</strong></small>
+            </div>
+          {% endif %}
         </div>
         <div class="card-body">
           {% if message %}

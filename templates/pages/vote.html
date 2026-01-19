@@ -6,8 +6,8 @@
     <div class="col-md-12">
       <div class="card">
         <div class="card-header">
-          <h5 class="title">Głosowanie na filmy</h5>
-          <p class="text-muted">Zagłosuj na film, który chcesz obejrzeć na następnym spotkaniu</p>
+          <h5 class="title">{% if filter_type == 'watched' %}Obejrzane filmy{% else %}Głosowanie na filmy{% endif %}</h5>
+          <p class="text-muted">{% if filter_type == 'watched' %}Filmy które już obejrzeliśmy{% else %}Zagłosuj na film, który chcesz obejrzeć na następnym spotkaniu{% endif %}</p>
         </div>
         <div class="card-body">
           {% if is_authenticated %}
@@ -20,7 +20,76 @@
             </div>
           {% endif %}
 
-          {% if proposals %}
+          {% if filter_type == 'watched' and watched_movies %}
+            <!-- Watched movies view -->
+            <div class="row">
+              {% for watched in watched_movies %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                  <div class="card h-100">
+                    {% if watched.poster_url %}
+                      <img src="{{ watched.poster_url }}" class="card-img-top" alt="{{ watched.title }}" style="height: 300px; object-fit: cover;">
+                    {% else %}
+                      <div style="height: 300px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white" style="font-size: 3rem;">✓</span>
+                      </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                      <h5 class="card-title mb-1">
+                        {{ watched.title }}
+                        {% if watched.year %}
+                          <small class="text-muted">({{ watched.year }})</small>
+                        {% endif %}
+                      </h5>
+                      {% if watched.duration %}
+                        <p class="mb-1">
+                          <small class="text-muted">Czas trwania: {{ watched.duration }}</small>
+                        </p>
+                      {% endif %}
+                      {% if watched.description %}
+                        <p class="card-text mb-2" style="font-size: 0.9rem; max-height: 4.5em; overflow: hidden;">
+                          {{ watched.description }}
+                        </p>
+                      {% endif %}
+                      {% if watched.rating and watched.rating != '-' %}
+                        <p class="mb-2">
+                          <span class="badge badge-info">Rating: {{ watched.rating }}/10</span>
+                        </p>
+                      {% endif %}
+                      
+                      <!-- Star rating system -->
+                      {% if is_authenticated %}
+                        <div class="mt-3">
+                          <div class="star-rating" id="rating-{{ forloop.counter }}" data-movie-title="{{ watched.title }}" style="display: flex; gap: 5px; font-size: 1.5rem;">
+                            {% for star in "12345" %}
+                              <span class="star" data-rating="{{ star }}" style="cursor: pointer; color: #ccc; transition: color 0.2s;">★</span>
+                            {% endfor %}
+                          </div>
+                          <div class="rating-info mt-2" id="rating-info-{{ forloop.counter }}" style="font-size: 0.85rem;">
+                            <small class="text-muted">Kliknij aby ocenić</small>
+                          </div>
+                          <!-- Tooltip for ratings by user -->
+                          <div class="ratings-tooltip mt-2" id="tooltip-{{ forloop.counter }}" style="display: none; font-size: 0.8rem; background: #2a2a2a; color: #fff; padding: 8px; border-radius: 4px; max-height: 200px; overflow-y: auto;">
+                          </div>
+                        </div>
+                      {% endif %}
+                      
+                      <div class="mt-3">
+                        <span class="badge badge-success">Obejrzane</span>
+                        {% if is_admin %}
+                          <button class="btn btn-sm btn-danger ms-2" onclick="removeWatchedMovie('{{ watched.title }}')">Usuń</button>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% elif filter_type == 'watched' and not watched_movies %}
+            <div class="alert alert-info">
+              Brak obejrzanych filmów.
+            </div>
+          {% elif proposals %}
+            <!-- Proposals view -->
             <div class="row">
               {% for proposal in proposals %}
                 <div class="col-md-6 col-lg-4 mb-4">
@@ -89,9 +158,11 @@
                                         onclick="markWatched({{ proposal.id }}, '{{ proposal.title }}')">
                                   Oglądnięte
                                 </button>
+                              {% endif %}
 
+                              {% if is_admin or proposal.is_proposer %}
                                 <button type="button"
-                                        class="btn btn-sm ml-2"
+                                        class="btn btn-sm ml-2 btn-outline-danger"
                                         onclick="deleteProposal({{ proposal.id }}, '{{ proposal.title }}')">
                                   Usuń
                                 </button>
@@ -190,6 +261,34 @@
   }
 }
 
+  function removeWatchedMovie(title) {
+    if (confirm(`Czy na pewno chcesz usunąć film "${title}" z listy obejrzanych?`)) {
+      fetch('{% url "remove_watched_movie" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          movie_title: title
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert(data.message);
+          location.reload();
+        } else {
+          alert('Błąd: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Błąd komunikacji z serwerem.');
+      });
+    }
+  }
+  {% endif %}
 
   function deleteProposal(proposalId, title) {
     if (confirm(`Czy na pewno chcesz usunąć propozycję "${title}"?`)) {
@@ -215,7 +314,175 @@
       });
     }
   }
-  {% endif %}
+
+  // Star rating functionality for watched movies
+  document.querySelectorAll('.star-rating').forEach(ratingContainer => {
+    const movieTitle = ratingContainer.dataset.movieTitle;
+    const containerId = ratingContainer.id;
+    const counterMatch = containerId.match(/\d+$/);
+    const counter = counterMatch ? counterMatch[0] : '';
+    
+    // Load existing ratings
+    fetch(`{% url 'get_movie_ratings' %}?movie_title=${encodeURIComponent(movieTitle)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const infoDiv = document.getElementById(`rating-info-${counter}`);
+          if (data.average_rating > 0) {
+            infoDiv.innerHTML = `<strong>${data.average_rating.toFixed(1)}/5</strong> (${data.rating_count} ocen)`;
+          }
+          
+          // Highlight user's rating and store it
+          if (data.user_rating) {
+            ratingContainer.dataset.currentUserRating = data.user_rating;
+            ratingContainer.querySelectorAll('.star').forEach(star => {
+              if (parseInt(star.dataset.rating) <= data.user_rating) {
+                star.style.color = '#FFD700';
+              }
+            });
+          }
+          
+          // Prepare ratings by user for tooltip
+          if (data.ratings_by_user.length > 0) {
+            ratingContainer.setAttribute('data-ratings-by-user', JSON.stringify(data.ratings_by_user));
+          }
+        }
+      });
+    
+    // Star hover effect
+    ratingContainer.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('mouseenter', (e) => {
+        const rating = parseInt(e.target.dataset.rating);
+        
+        // Highlight stars up to hovered star
+        ratingContainer.querySelectorAll('.star').forEach(s => {
+          if (parseInt(s.dataset.rating) <= rating) {
+            s.style.color = '#FFD700';
+          } else {
+            s.style.color = '#ccc';
+          }
+        });
+        
+        // Show tooltip with ratings by user
+        const tooltipDiv = document.getElementById(`tooltip-${counter}`);
+        const ratingsData = JSON.parse(ratingContainer.getAttribute('data-ratings-by-user') || '[]');
+        
+        if (ratingsData.length > 0) {
+          let tooltipHTML = '<strong>Oceny:</strong><br>';
+          ratingsData.forEach(r => {
+            tooltipHTML += `${r.user__username}: ${r.rating}/5★<br>`;
+          });
+          tooltipDiv.innerHTML = tooltipHTML;
+          tooltipDiv.style.display = 'block';
+        }
+      });
+      
+      star.addEventListener('mouseleave', () => {
+        // Reset star colors
+        ratingContainer.querySelectorAll('.star').forEach(s => {
+          s.style.color = '#ccc';
+        });
+        
+        // Re-highlight user's rating
+        fetch(`{% url 'get_movie_ratings' %}?movie_title=${encodeURIComponent(movieTitle)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.user_rating) {
+              ratingContainer.querySelectorAll('.star').forEach(s => {
+                if (parseInt(s.dataset.rating) <= data.user_rating) {
+                  s.style.color = '#FFD700';
+                }
+              });
+            }
+          });
+        
+        // Hide tooltip
+        document.getElementById(`tooltip-${counter}`).style.display = 'none';
+      });
+      
+      // Click to rate or remove rating
+      star.addEventListener('click', (e) => {
+        const rating = parseInt(e.target.dataset.rating);
+        
+        // Check if user is clicking on already-rated stars to remove
+        const currentUserRating = ratingContainer.dataset.currentUserRating ? parseInt(ratingContainer.dataset.currentUserRating) : null;
+        const isRemoveClick = currentUserRating === rating;
+        
+        if (isRemoveClick) {
+          // Remove the rating
+          fetch('{% url "remove_movie_rating" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+              movie_title: movieTitle
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              // Update info
+              const infoDiv = document.getElementById(`rating-info-${counter}`);
+              if (data.rating_count > 0) {
+                infoDiv.innerHTML = `<strong>${data.average_rating.toFixed(1)}/5</strong> (${data.rating_count} ocen)`;
+              } else {
+                infoDiv.innerHTML = '';
+              }
+              
+              // Clear all stars
+              ratingContainer.querySelectorAll('.star').forEach(s => {
+                s.style.color = '#ccc';
+              });
+              
+              ratingContainer.dataset.currentUserRating = null;
+              ratingContainer.setAttribute('data-ratings-by-user', JSON.stringify(data.ratings_by_user));
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        } else {
+          // Add or update the rating
+          fetch('{% url "rate_movie" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+              movie_title: movieTitle,
+              rating: rating
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              // Update info
+              const infoDiv = document.getElementById(`rating-info-${counter}`);
+              infoDiv.innerHTML = `<strong>${data.average_rating.toFixed(1)}/5</strong> (${data.rating_count} ocen)`;
+              
+              // Highlight the rated stars
+              ratingContainer.querySelectorAll('.star').forEach(s => {
+                if (parseInt(s.dataset.rating) <= rating) {
+                  s.style.color = '#FFD700';
+                } else {
+                  s.style.color = '#ccc';
+                }
+              });
+              
+              ratingContainer.dataset.currentUserRating = rating;
+              ratingContainer.setAttribute('data-ratings-by-user', JSON.stringify(data.ratings_by_user));
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        }
+      });
+    });
+  });
 </script>
 {% endif %}
 
