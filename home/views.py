@@ -954,7 +954,8 @@ def vote_page(request):
     
     for p in proposals:
         # Get voter usernames from prefetched data (no new queries)
-        voter_names = [v.voter.username for v in p.proposal_votes.all()]
+        # Filter out votes with deleted users (on_delete=CASCADE should prevent this, but handle it gracefully)
+        voter_names = [v.voter.username for v in p.proposal_votes.all() if v.voter]
         
         imdb_data = {}
         
