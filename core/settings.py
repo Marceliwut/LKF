@@ -22,7 +22,7 @@ from django.contrib.staticfiles.finders import FileSystemFinder, AppDirectoriesF
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "core.static_finders.IgnoreScssFinder",
+    "core.static_finders.IgnoreScssFinder"
 ]
 
 
@@ -41,7 +41,7 @@ if not SECRET_KEY:
 
 # Enable/Disable DEBUG Mode
 #DEBUG = str2bool(os.environ.get('DEBUG'))
-DEBUG = False
+DEBUG = True
 #print(' DEBUG -> ' + str(DEBUG) ) 
 
 
