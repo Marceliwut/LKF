@@ -30,6 +30,12 @@ from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 
+from django.shortcuts import render
+
+def server_error(request):
+    return render(request, '500.html', status=500)
+
+
 @csrf_exempt
 def server_error(request, *args, **kwargs):
     """Custom 500 with full error details."""
