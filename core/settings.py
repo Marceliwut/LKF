@@ -20,10 +20,10 @@ from django.contrib.staticfiles.finders import FileSystemFinder, AppDirectoriesF
 
 
 STATICFILES_FINDERS = [
-    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "core.static_finders.IgnoreScssFinder",  # replaces FileSystemFinder
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "core.static_finders.IgnoreScssFinder"
 ]
+
 
 
 load_dotenv()  # take environment variables from .env.
@@ -41,7 +41,7 @@ if not SECRET_KEY:
 
 # Enable/Disable DEBUG Mode
 #DEBUG = str2bool(os.environ.get('DEBUG'))
-DEBUG = True
+DEBUG = False
 #print(' DEBUG -> ' + str(DEBUG) ) 
 
 
