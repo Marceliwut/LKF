@@ -129,7 +129,7 @@
                 <div class="row g-0">
                     <div class="col-md-4">
                         {% if row|length > 12 and row.12 and row.12 != "N/A" %}
-                        <img src="{{ row.12 }}" loading="lazy" class="img-fluid rounded-start lazy-image" alt="{{ row.1 }}" style="max-height:400px;">
+                        <img src="{{ row.12 }}" loading="lazy" class="img-fluid rounded-start lazy-image" alt="{{ row.1 }}" style="max-height: 500px; width: 100%; object-fit: cover;">
                         {% else %}
                         <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available" loading="lazy">
                         {% endif %}

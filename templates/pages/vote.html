@@ -27,9 +27,9 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                   <div class="card h-100">
                     {% if watched.poster_url %}
-                      <img src="{{ watched.poster_url }}" class="card-img-top lazy-image" alt="{{ watched.title }}" loading="lazy" style="height: 300px; object-fit: cover; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                      <img src="{{ watched.poster_url }}" class="card-img-top lazy-image" alt="{{ watched.title }}" loading="lazy" style="height: 450px; object-fit: cover; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     {% else %}
-                      <div style="height: 300px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                      <div style="height: 450px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
                         <span class="text-white" style="font-size: 3rem;">✓</span>
                       </div>
                     {% endif %}
@@ -95,7 +95,7 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                   <div class="card h-100">
                     {% if proposal.imdb.poster %}
-                      <img src="{{ proposal.imdb.poster }}" class="card-img-top lazy-image" alt="{{ proposal.title }}" loading="lazy" style="height: 300px; object-fit: cover; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                      <img src="{{ proposal.imdb.poster }}" class="card-img-top lazy-image" alt="{{ proposal.title }}" loading="lazy" style="height: 450px; object-fit: cover; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     {% else %}
                       <img src="{% static 'assets/img/anime3.png' %}" class="card-img-top" alt="{{ proposal.title }}" loading="lazy">
                     {% endif %}
