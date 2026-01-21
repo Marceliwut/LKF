@@ -33,18 +33,31 @@ class LogEntry(models.Model):
 
 
 class Media(models.Model):
-    number = models.IntegerField()  # Represents the serial number
-    title = models.CharField(max_length=255)
+    number = models.IntegerField(unique=True, db_index=True)  # Represents the serial number (indexed)
+    title = models.CharField(max_length=255, db_index=True)
     year = models.IntegerField()
-    duration = models.CharField(max_length=50)
+    duration = models.CharField(max_length=50)  # e.g., "2h 22m"
     age_rating = models.CharField(max_length=50)
     rating = models.FloatField()
-    votes = models.IntegerField()
+    votes = models.CharField(max_length=50)  # e.g., "3M" from CSV
     metascore = models.IntegerField(null=True, blank=True)  # Some values could be missing
     description = models.TextField()
-    watched = models.BooleanField(default=False)
-    skipped = models.BooleanField(default=False)
+    watched = models.BooleanField(default=False, db_index=True)
+    skipped = models.BooleanField(default=False, db_index=True)
     series = models.BooleanField(default=False)
+    poster_url = models.URLField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['number']
+        indexes = [
+            models.Index(fields=['watched', 'number']),
+            models.Index(fields=['title', 'year']),
+        ]
+    
+    def __str__(self):
+        return f"{self.number}. {self.title} ({self.year})"
 
 
 class MovieProposal(models.Model):
