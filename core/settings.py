@@ -169,6 +169,12 @@ STATICFILES_DIRS = (
 #if not DEBUG:
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+print("DEBUG:", DEBUG)
+print("BASE_DIR:", BASE_DIR)
+print("STATIC_ROOT:", STATIC_ROOT)
+print("STATICFILES_DIRS:", STATICFILES_DIRS)
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
