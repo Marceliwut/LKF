@@ -8,6 +8,9 @@ from django.http import JsonResponse
 import json
 import shutil
 from datetime import datetime
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
 from django.shortcuts import render
 from django.conf import settings
 import re
@@ -830,12 +833,15 @@ def search_imdb(request):
 from django.db.models import Count
 import requests
 
+@cache_page(60)  # Cache the page for 60 seconds for anonymous users
 def vote_page(request):
     """Show all movie proposals sorted by votes, or watched movies if filter=watched."""
     from django.db.models import Count
     import requests
     
     filter_type = request.GET.get('filter', 'proposals')
+    page = int(request.GET.get('page', 1))  # Pagination support
+    items_per_page = 20  # Show 20 proposals per page
     
     # If filter is 'watched', show watched movies from database
     if filter_type == 'watched':
@@ -862,9 +868,16 @@ def vote_page(request):
     from django.utils import timezone
     from datetime import timedelta
     
-    proposals = MovieProposal.objects.annotate(
+    # Query proposals with proposer in one go (avoid N+1)
+    proposals = MovieProposal.objects.select_related('proposer').annotate(
         vote_count=Count('proposal_votes')
     ).order_by('-vote_count', '-created_at')
+    
+    # Pagination
+    total_count = proposals.count()
+    start_idx = (page - 1) * items_per_page
+    end_idx = start_idx + items_per_page
+    proposals_page = proposals[start_idx:end_idx]
     
     user_votes = set()
     if request.user.is_authenticated:
@@ -876,9 +889,9 @@ def vote_page(request):
     proposals_to_cache = []  # Track proposals that need fresh data
     
     # Pre-fetch all voter data for all proposals at once (avoid N+1 queries)
-    # Get all votes with valid voters for all proposals
+    # Get all votes with valid voters for current page proposals
     all_votes = ProposalVote.objects.filter(
-        proposal_id__in=[p.id for p in proposals],
+        proposal_id__in=[p.id for p in proposals_page],
         voter__isnull=False
     ).select_related('voter')
     
@@ -889,7 +902,7 @@ def vote_page(request):
             votes_by_proposal[vote.proposal_id] = []
         votes_by_proposal[vote.proposal_id].append(vote.voter.username)
     
-    for p in proposals:
+    for p in proposals_page:
         # Get voter usernames from our pre-fetched data (no new queries)
         voter_names = votes_by_proposal.get(p.id, [])
         
@@ -951,12 +964,22 @@ def vote_page(request):
     if proposals_to_cache:
         MovieProposal.objects.bulk_update(proposals_to_cache, ['cached_imdb_data', 'cached_at'], batch_size=100)
     
+    # Calculate pagination info
+    total_pages = (total_count + items_per_page - 1) // items_per_page
+    has_next = page < total_pages
+    has_prev = page > 1
+    
     return render(request, 'pages/vote.html', {
         'proposals': proposals_with_votes,
         'watched_movies': None,
         'is_authenticated': request.user.is_authenticated,
         'is_admin': request.user.is_authenticated and request.user.username == 'admin',
-        'filter_type': 'proposals'
+        'filter_type': 'proposals',
+        'page': page,
+        'total_pages': total_pages,
+        'has_next': has_next,
+        'has_prev': has_prev,
+        'total_proposals': total_count,
     })
 
 

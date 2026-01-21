@@ -7,9 +7,15 @@
     LKF - Lista Filmów
 </title>
 <!--     Fonts and icons     -->
-<link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />
+<!-- Preload critical fonts for faster render -->
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" /></noscript>
 <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
 <!-- Nucleo Icons -->
 <link href="{% static 'assets/css/nucleo-icons.css' %}" rel="stylesheet" />
-<!-- CSS Files -->
-<link href="{% static 'assets/css/black-dashboard.css' %}?v=1.0.0" rel="stylesheet" />
+<!-- CSS Files - Critical path optimization -->
+<link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+<!-- Nucleo Icons -->
+<link href="{% static 'assets/css/nucleo-icons.css' %}" rel="stylesheet" />
+<link id="pagestyle" href="{% static 'assets/css/black-dashboard.css' %}" rel="stylesheet" />
+<!-- CSS Files - Critical path optimization -->

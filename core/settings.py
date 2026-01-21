@@ -174,3 +174,34 @@ OMDB_API_KEY = os.environ.get('OMDB_API_KEY', None)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Cache Control Headers for Static Files (WhiteNoise Configuration)
+# Cache static files for 1 year (31536000 seconds) since Django will add content hash
+WHITENOISE_MAX_AGE = 31536000
+
+# Enable compression for text-based assets
+WHITENOISE_COMPRESS_OFFLINE = True
+WHITENOISE_COMPRESSION_QUALITY = 80
+
+# GZIP Compression Middleware Settings
+# Compress responses larger than 1KB
+GZIP_MIN_SIZE_BYTES = 1024
+
+# Cache Configuration for View-Level Caching
+# Using local memory cache for now (for production, use Redis)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'lkf-cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        },
+        'TIMEOUT': 3600,  # Default cache timeout: 1 hour
+    }
+}
+
+# Session configuration for performance
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_CACHE_ALIAS = 'default'
+
+# QuerySet caching configuration
+QUERY_CACHE_TIMEOUT = 300  # 5 minutes

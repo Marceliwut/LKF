@@ -187,6 +187,37 @@
                 </div>
               {% endfor %}
             </div>
+            
+            <!-- Pagination controls -->
+            {% if total_pages > 1 %}
+              <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                  <li class="page-item {% if not has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="?filter=proposals&page=1">Pierwsza</a>
+                  </li>
+                  {% if has_prev %}
+                    <li class="page-item">
+                      <a class="page-link" href="?filter=proposals&page={{ page|add:'-1' }}">Poprzednia</a>
+                    </li>
+                  {% endif %}
+                  
+                  {% for page_num in total_pages|add:'0'|stringformat:'d'|slice:':0' %}
+                  {% endfor %}
+                  <li class="page-item active">
+                    <span class="page-link">Strona {{ page }} z {{ total_pages }}</span>
+                  </li>
+                  
+                  {% if has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?filter=proposals&page={{ page|add:'1' }}">Następna</a>
+                    </li>
+                  {% endif %}
+                  <li class="page-item {% if not has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?filter=proposals&page={{ total_pages }}">Ostatnia</a>
+                  </li>
+                </ul>
+              </nav>
+            {% endif %}
           {% else %}
             <div class="alert alert-info">
               Brak zaproponowanych filmów. {% if is_authenticated %}<a href="{% url 'propose' %}" class="alert-link">Zaproponuj pierwszy!</a>{% endif %}
