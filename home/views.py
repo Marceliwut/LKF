@@ -32,27 +32,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 from django.shortcuts import render
 
-def server_error(request):
-    return render(request, '500.html', status=500)
-
-
-@csrf_exempt
-def server_error(request, *args, **kwargs):
-    """Custom 500 with full error details."""
-    try:
-        exc_type, exc_value, tb = request.exc_info() if hasattr(request, 'exc_info') else (None, None, None)
-        
-        error_data = {
-            'title': 'Server Error (500)',
-            'message': str(exc_value) if exc_value else 'Unknown server error',
-            'exc_type': exc_type.__name__ if exc_type else 'Unknown',
-            'traceback_snippet': ''.join(traceback.format_tb(tb)[-5:]) if tb else 'No traceback available',
-            'full_path': request.path,
-        }
-        return render(request, '500.html', error_data, status=500)
-    except:
-        return HttpResponseServerError('Server error occurred while handling error.', content_type='text/plain')
-
 
 
 @csrf_exempt

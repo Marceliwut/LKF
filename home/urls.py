@@ -34,6 +34,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# ADD THESE TWO LINES (exact app name needed)
-#handler404 = 'home.views.page_not_found'  # Replace 'lkf' with your app folder
-handler500 = 'home.views.server_error'
