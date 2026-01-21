@@ -184,6 +184,10 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/auth-signin/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Ignore SCSS files during collectstatic
+STATICFILES_IGNORE_PATTERNS = ["*.scss"]
+
+
 # IMDb API Configuration
 OMDB_API_KEY = os.environ.get('OMDB_API_KEY', None)
 
