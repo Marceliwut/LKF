@@ -1,0 +1,46 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"Server Error" }} {% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-gradient-danger text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-bug text-warning mr-2"></i>{{ title }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Error Summary -->
+          <div class="alert alert-danger">
+            <p> DB is waking up. Give it a sec </p>
+          </div>
+          
+          <!-- Traceback Snippet (Last 5 frames) -->
+          {% if traceback_snippet %}
+          <div class="mb-4">
+         
+            <pre class="bg-light p-3 rounded small text-monospace overflow-auto" style="max-height: 300px;">
+{{ traceback_snippet|linebreaksbr }}
+            </pre>
+          </div>
+          {% endif %}
+          
+          <!-- Action Buttons -->
+          <div class="d-flex">
+            <a href="{% url 'index' %}" class="btn btn-primary mr-2">
+              <i class="fas fa-home"></i> Home
+            </a>
+            <button onclick="history.back()" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

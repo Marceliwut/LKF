@@ -23,6 +23,32 @@ from django.http import FileResponse
 from django.conf import settings
 from django.db import models
 
+
+import traceback
+from django.http import HttpResponseServerError
+from django.shortcuts import render
+from django.template import RequestContext
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def server_error(request, *args, **kwargs):
+    """Custom 500 with full error details."""
+    try:
+        exc_type, exc_value, tb = request.exc_info() if hasattr(request, 'exc_info') else (None, None, None)
+        
+        error_data = {
+            'title': 'Server Error (500)',
+            'message': str(exc_value) if exc_value else 'Unknown server error',
+            'exc_type': exc_type.__name__ if exc_type else 'Unknown',
+            'traceback_snippet': ''.join(traceback.format_tb(tb)[-5:]) if tb else 'No traceback available',
+            'full_path': request.path,
+        }
+        return render(request, '500.html', error_data, status=500)
+    except:
+        return HttpResponseServerError('Server error occurred while handling error.', content_type='text/plain')
+
+
+
 @csrf_exempt
 @require_POST
 def clear_logs(request):

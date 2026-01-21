@@ -32,8 +32,11 @@ if not SECRET_KEY:
 
 # Enable/Disable DEBUG Mode
 #DEBUG = str2bool(os.environ.get('DEBUG'))
-DEBUG = True
+DEBUG = False
 #print(' DEBUG -> ' + str(DEBUG) ) 
+
+
+
 
 # Docker HOST
 ALLOWED_HOSTS = ['*']
@@ -61,6 +64,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "core.middleware.db_wakeup.DatabaseWakeUpMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -108,13 +112,18 @@ DB_PORT     = os.getenv('DB_PORT'     , None)
 DB_NAME     = os.getenv('DB_NAME'     , None)
 
 
-
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///db.sqlite3',  # Local fallback
         conn_max_age=600
     )
 }
+# if os.environ.get("SIMULATE_SLEEP"):
+#     DATABASES["default"]["HOST"] = "10.255.255.1"  # non-routable IP
+
+
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
