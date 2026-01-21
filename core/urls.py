@@ -25,3 +25,5 @@ urlpatterns = [
     path("", include('admin_black.urls')),
     path("__reload__/", include("django_browser_reload.urls"))
 ]
+# Error Handlers
+handler500 = 'home.views.server_error_500'

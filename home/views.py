@@ -1262,3 +1262,17 @@ def remove_watched_movie(request):
             return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
     
     return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda żądania.'})
+
+
+# Error Handlers
+def server_error_500(request):
+    """Handle 500 server errors."""
+    return render(
+        request,
+        '500.html',
+        {
+            'title': 'Internal Server Error',
+            'message': 'Something went wrong on our end. Please try again later.',
+        },
+        status=500
+    )
