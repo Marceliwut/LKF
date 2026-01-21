@@ -129,9 +129,9 @@
                 <div class="row g-0">
                     <div class="col-md-4">
                         {% if row|length > 12 and row.12 and row.12 != "N/A" %}
-                        <img src="{{ row.12 }}" style="max-height:400px;" class="img-fluid rounded-start" alt="{{ row.1 }}">
+                        <img src="{{ row.12 }}" loading="lazy" class="img-fluid rounded-start lazy-image" alt="{{ row.1 }}" style="max-height:400px;">
                         {% else %}
-                        <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available">
+                        <img src="{% static '/assets/img/knur.png' %}" class="img-fluid rounded-start" alt="No poster available" loading="lazy">
                         {% endif %}
                     </div>
                     <div class="col-md-8">
@@ -156,5 +156,64 @@
         {% endfor %}
     </div>
 </div>
+
+<!-- Lazy Loading Enhancement with Blur-up effect -->
+<style>
+  .lazy-image {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .lazy-image.loaded {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  // Lazy load images with fade effect
+  document.addEventListener('DOMContentLoaded', function() {
+    const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+    
+    // Use Intersection Observer for better performance
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.addEventListener('load', function() {
+              if (img.classList.contains('lazy-image')) {
+                img.classList.add('loaded');
+              }
+            });
+            img.addEventListener('error', function() {
+              if (img.classList.contains('lazy-image')) {
+                img.classList.add('loaded');
+              }
+            });
+            // Image is already loading due to native lazy loading
+            if (img.complete && img.classList.contains('lazy-image')) {
+              img.classList.add('loaded');
+            }
+            observer.unobserve(img);
+          }
+        });
+      });
+      
+      lazyImages.forEach(img => imageObserver.observe(img));
+    } else {
+      // Fallback for older browsers
+      lazyImages.forEach(img => {
+        if (img.classList.contains('lazy-image')) {
+          img.addEventListener('load', function() {
+            img.classList.add('loaded');
+          });
+          if (img.complete) {
+            img.classList.add('loaded');
+          }
+        }
+      });
+    }
+  });
+</script>
 
 {% endblock %}

@@ -27,7 +27,7 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                   <div class="card h-100">
                     {% if watched.poster_url %}
-                      <img src="{{ watched.poster_url }}" class="card-img-top" alt="{{ watched.title }}" style="height: 300px; object-fit: cover;">
+                      <img src="{{ watched.poster_url }}" class="card-img-top lazy-image" alt="{{ watched.title }}" loading="lazy" style="height: 300px; object-fit: cover; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     {% else %}
                       <div style="height: 300px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
                         <span class="text-white" style="font-size: 3rem;">✓</span>
@@ -95,9 +95,9 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                   <div class="card h-100">
                     {% if proposal.imdb.poster %}
-                      <img src="{{ proposal.imdb.poster }}" class="card-img-top" alt="{{ proposal.title }}">
+                      <img src="{{ proposal.imdb.poster }}" class="card-img-top lazy-image" alt="{{ proposal.title }}" loading="lazy" style="height: 300px; object-fit: cover; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     {% else %}
-                      <img src="{% static 'assets/img/anime3.png' %}" class="card-img-top" alt="{{ proposal.title }}">
+                      <img src="{% static 'assets/img/anime3.png' %}" class="card-img-top" alt="{{ proposal.title }}" loading="lazy">
                     {% endif %}
                     <div class="card-body d-flex flex-column">
                       <h5 class="card-title mb-1">
@@ -482,6 +482,66 @@
         }
       });
     });
+  });
+</script>
+
+<!-- Lazy Loading Enhancement with Blur-up effect -->
+<style>
+  .lazy-image {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .lazy-image.loaded {
+    opacity: 1;
+  }
+  
+  /* Placeholder while loading */
+  .card-img-top {
+    background-size: cover;
+    background-position: center;
+  }
+</style>
+
+<script>
+  // Lazy load images with blur-up effect
+  document.addEventListener('DOMContentLoaded', function() {
+    const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+    
+    // Use Intersection Observer for better performance
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.addEventListener('load', function() {
+              img.classList.add('loaded');
+            });
+            img.addEventListener('error', function() {
+              img.classList.add('loaded'); // Show even if error
+            });
+            // Image is already loading due to native lazy loading
+            // Just ensure it has the loaded class when ready
+            if (img.complete) {
+              img.classList.add('loaded');
+            }
+            observer.unobserve(img);
+          }
+        });
+      });
+      
+      lazyImages.forEach(img => imageObserver.observe(img));
+    } else {
+      // Fallback for older browsers
+      lazyImages.forEach(img => {
+        img.addEventListener('load', function() {
+          img.classList.add('loaded');
+        });
+        if (img.complete) {
+          img.classList.add('loaded');
+        }
+      });
+    }
   });
 </script>
 {% endif %}
