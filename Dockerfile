@@ -4,14 +4,20 @@ FROM python:3.9
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+# set working directory
+WORKDIR /app
+
 COPY requirements.txt .
-# install python dependencies
+
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# running migrations
+# collect static files
+RUN python manage.py collectstatic --noinput
+
+# run migrations
 RUN python manage.py migrate
 
 # gunicorn
