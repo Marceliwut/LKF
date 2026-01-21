@@ -14,10 +14,11 @@ import re
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
 from .forms import CustomLoginForm, CustomSignupForm, AdminResetPasswordForm, ChangePasswordForm, MovieProposalForm
-from .models import MovieProposal, ProposalVote, LogEntry, MovieRating
+from .models import MovieProposal, ProposalVote, LogEntry, MovieRating, Media
 from django.views.decorators.http import require_POST
 from django.http import FileResponse
 from django.conf import settings
+from django.db import models
 
 @csrf_exempt
 @require_POST
@@ -58,19 +59,12 @@ def log_action(request, action, proposal_id=None, proposal_title='', details='')
 
 
 
-# Define the path for the CSV file
-from django.conf import settings
-CSV_FILE_PATH = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-BACKUP_DIR = os.path.join(settings.MEDIA_ROOT, 'backups')
-
-
-
 # Run the script
 from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def update_posters(request):
-    """Update poster URLs in the CSV file using a user-provided TMDb API key."""
+    """Update poster URLs in Media model using a user-provided TMDb API key."""
     if request.method == "POST":
         try:
             # Get the TMDb API key from the POST request
@@ -80,183 +74,121 @@ def update_posters(request):
             if not tmdb_api_key:
                 return JsonResponse({"status": "error", "message": "TMDb API key is required."})
 
-            # Update the poster URLs in the CSV file
-            updated_rows = []
-            with open(CSV_FILE_PATH, "r", encoding="utf-8") as csvfile:
-                reader = csv.reader(csvfile)
-                rows = list(reader)
+            # TMDB API base URL
+            TMDB_BASE_URL = "https://api.themoviedb.org/3/search/movie"
+            
+            # Update poster URLs for all Media entries without poster_url
+            media_entries = Media.objects.filter(poster_url='')
+            updated_count = 0
 
-                if len(rows) > 0:
-                    header = rows[0]
-                    if "Poster URL" not in header:
-                        header.append("Poster URL")
-                    updated_rows.append(header)
+            for media in media_entries:
+                if media.title and media.year:
+                    try:
+                        response = requests.get(TMDB_BASE_URL, params={
+                            "api_key": tmdb_api_key,
+                            "query": media.title,
+                            "year": media.year
+                        })
+                        if response.status_code == 200:
+                            results = response.json().get("results", [])
+                            if results:
+                                poster_path = results[0].get("poster_path")
+                                if poster_path:
+                                    media.poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
+                                    media.save()
+                                    updated_count += 1
+                    except Exception as e:
+                        print(f"Error fetching poster for {media.title} ({media.year}): {e}")
 
-                    for row in rows[1:]:
-                        while len(row) < len(header):
-                            row.append("")
-
-                        title = row[1] if len(row) > 1 else None
-                        year = row[2] if len(row) > 2 else None
-
-                        if not row[-1] and title and year:
-                            try:
-                                response = requests.get(TMDB_BASE_URL, params={
-                                    "api_key": tmdb_api_key,
-                                    "query": title,
-                                    "year": year
-                                })
-                                if response.status_code == 200:
-                                    results = response.json().get("results", [])
-                                    if results:
-                                        poster_path = results[0].get("poster_path")
-                                        if poster_path:
-                                            row[-1] = f"https://image.tmdb.org/t/p/w500{poster_path}"
-                            except Exception as e:
-                                print(f"Error fetching poster for {title} ({year}): {e}")
-                                row[-1] = "N/A"
-
-                        updated_rows.append(row)
-
-            # Save the updated rows back to the CSV file
-            with open(CSV_FILE_PATH, "w", encoding="utf-8", newline="") as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerows(updated_rows)
-
-            return JsonResponse({"status": "success", "message": "Poster URLs updated successfully."})
+            return JsonResponse({"status": "success", "message": f"Zaktualizowano {updated_count} postów filmowych."})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+    return JsonResponse({"status": "error", "message": "Nieprawidłowa metoda żądania."})
 
 def index(request):
     """Redirect to vote page. Home page now shows movie proposals to vote on."""
     return redirect('vote')
 
-def refresh_csv_data(request):
-    try:
-        # Download CSV data and save it to the file
-        csv_data = get_csv_data()
-        save_csv_to_file(csv_data)  # Save the data to a file
-        return JsonResponse({'status': 'success', 'message': 'Data refreshed and saved to file!'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
-
-
-def get_csv_data():
-    print("Downloading CSV data...")
-
-    # Replace this with the actual URL of your CSV file
-    file_url = 'https://1drv.ms/x/c/e8caa386cc70b3e6/EQj6vRNxHBhDjTbOZdKcI8sBIrRLcnH59LIH34XLcVu1Qg?e=crEeXI&download=1'
-
-    try:
-        # Download the CSV file
-        response = requests.get(file_url)
-        response.raise_for_status()
-
-        # Parse the CSV data
-        csv_data = []
-        reader = csv.reader(response.text.splitlines())
-        for row in reader:
-            csv_data.append(row)
-
-        print("CSV data downloaded successfully!")
-        return csv_data
-    except requests.exceptions.RequestException as e:
-        print(f"Error downloading file: {e}")
-        raise e
-    except csv.Error as e:
-        print(f"Error processing CSV file: {e}")
-        raise e
-
-
-def save_csv_to_file(csv_data):
-    """Save the CSV data to a file."""
-    with open(CSV_FILE_PATH, "w", newline='', encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerows(csv_data)
-    print(f"CSV data saved to {CSV_FILE_PATH}")
-
-
-def load_csv_from_file():
-    """Load CSV data from a file."""
-    if os.path.exists(CSV_FILE_PATH):
-        print(f"Loading data from {CSV_FILE_PATH}...")
-        try:
-            with open(CSV_FILE_PATH, "r", encoding="utf-8") as file:
-                reader = csv.reader(file)
-                csv_data = [row for row in reader]
-                print("CSV data loaded successfully!")
-                return csv_data
-        except csv.Error as e:
-            print(f"Error reading CSV file: {e}")
-    else:
-        print(f"{CSV_FILE_PATH} does not exist. Returning empty data.")
-        return []
-    
 @csrf_exempt
 def update_entry(request):
+    """Update a Media entry's watched or skipped status."""
     if request.method == "POST":
         try:
             # Parse the request payload
             data = json.loads(request.body)
-            entry_id = str(data.get("id"))  # Entry ID as a string
+            entry_id = data.get("id")  # Entry number as integer
             field = data.get("field")  # Field to update (watched or skipped)
 
-            # Debugging
-            print(f"Request data: ID={entry_id}, Field={field}")
+            if not entry_id or not field:
+                return JsonResponse({"status": "error", "message": "Brakuje wymaganych danych."})
 
-            # Load the current CSV data
-            csv_data = load_csv_from_file()
+            # Get the media entry by number
+            try:
+                media = Media.objects.get(number=int(entry_id))
+            except (Media.DoesNotExist, ValueError):
+                return JsonResponse({"status": "error", "message": f"Film o numerze {entry_id} nie znaleziony."})
 
-            # Ensure the CSV data is not empty
-            if not csv_data or len(csv_data) < 2:
-                return JsonResponse({"status": "error", "message": "CSV data is empty or invalid."})
-
-            # Update the specific entry
-            header, rows = csv_data[0], csv_data[1:]  # Separate header and rows
-            updated = False
-
-            for row in rows:
-                print(f"Checking row: {row}")  # Debugging
-                if row[0] == entry_id:  # Match the entry by ID
-                    if field == "watched":
-                        row[9] = "TRUE" if row[9] != "TRUE" else "FALSE"  # Toggle "Oglądnięte"
-                    elif field == "skipped":
-                        row[10] = "TRUE" if row[10] != "TRUE" else "FALSE"  # Toggle "Skipnięte"
-                    updated = True
-                    break  # Break once the entry is updated
-
-            if not updated:
-                return JsonResponse({"status": "error", "message": f"Entry with ID {entry_id} not found."})
-
-            # Save the updated data back to the file
-            save_csv_to_file([header] + rows)
-            return JsonResponse({"status": "success", "message": f"Film {entry_id} updated to {field}."})
+            # Update the field
+            if field == "watched":
+                media.watched = not media.watched
+            elif field == "skipped":
+                media.skipped = not media.skipped
+            else:
+                return JsonResponse({"status": "error", "message": f"Nieznane pole: {field}"})
+            
+            media.save()
+            return JsonResponse({"status": "success", "message": f"Film {entry_id} zaktualizowany."})
         except Exception as e:
-            print("Error:", e)  # Debugging
             return JsonResponse({"status": "error", "message": str(e)})
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+    return JsonResponse({"status": "error", "message": "Nieprawidłowa metoda żądania."})
 
 def backup_csv(request):
+    """Create a backup of Media model data as CSV in the backups directory."""
     if request.method == "POST":
         try:
             # Ensure the backup directory exists
-            if not os.path.exists(BACKUP_DIR):
-                os.makedirs(BACKUP_DIR)
+            backup_dir = os.path.join(settings.MEDIA_ROOT, 'backups')
+            if not os.path.exists(backup_dir):
+                os.makedirs(backup_dir)
 
             # Generate a filename with the current date and time
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            backup_file = os.path.join(BACKUP_DIR, f"backup_{timestamp}.csv")
+            backup_file = os.path.join(backup_dir, f"backup_{timestamp}.csv")
 
-            # Copy the file to the backup directory
-            if os.path.exists(CSV_FILE_PATH):
-                shutil.copy(CSV_FILE_PATH, backup_file)
-                return JsonResponse({"status": "success", "message": f"Backup created: {backup_file}"})
-            else:
-                return JsonResponse({"status": "error", "message": f"Source file not found: {CSV_FILE_PATH}"})
+            # Export all Media entries to CSV
+            import csv
+            media_entries = Media.objects.all().order_by('number')
+            
+            with open(backup_file, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                # Write header
+                writer.writerow([
+                    'Number', 'Title', 'Year', 'Duration', 'Age Rating', 'Rating',
+                    'Votes', 'Metascore', 'Description', 'Watched', 'Skipped',
+                    'Series', 'Poster URL'
+                ])
+                # Write data rows
+                for media in media_entries:
+                    writer.writerow([
+                        media.number,
+                        media.title,
+                        media.year or '',
+                        media.duration or '',
+                        media.age_rating or '',
+                        media.rating or '',
+                        media.votes or '',
+                        media.metascore or '',
+                        media.description or '',
+                        'TRUE' if media.watched else 'FALSE',
+                        'TRUE' if media.skipped else 'FALSE',
+                        media.series or 'FALSE',
+                        media.poster_url or ''
+                    ])
+            
+            return JsonResponse({"status": "success", "message": f"Backup utworzony: {backup_file}"})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+    return JsonResponse({"status": "error", "message": "Nieprawidłowa metoda żądania."})
 
 from django.shortcuts import render
 from django.conf import settings
@@ -367,78 +299,99 @@ def file_explorer(request):
 
 @csrf_exempt
 def restore_backup(request):
-    """Restore a backup file to /media/data.csv."""
+    """Restore a backup CSV file and import it back to Media model."""
     if request.method == "POST":
         try:
             # Get the filename from the POST request
             filename = request.POST.get('filename')
             if not filename:
-                return JsonResponse({"status": "error", "message": "No filename provided."})
+                return JsonResponse({"status": "error", "message": "Nie podano nazwy pliku."})
 
-            # Construct the source and destination paths
+            # Construct the source path
             source_path = os.path.join(settings.MEDIA_ROOT, 'backups', filename)
-            destination_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
 
             # Ensure the source file exists
             if not os.path.exists(source_path):
-                return JsonResponse({"status": "error", "message": "Backup file not found."})
+                return JsonResponse({"status": "error", "message": "Plik kopii zapasowej nie znaleziony."})
 
-            # Copy the backup file to /media/data.csv
-            shutil.copy(source_path, destination_path)
-
-            return JsonResponse({"status": "success", "message": f"Backup {filename} restored to data.csv."})
+            # Read the backup CSV and import to Media model
+            import csv
+            imported_count = 0
+            error_count = 0
+            
+            with open(source_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    try:
+                        number = int(row['Number'])
+                        # Use update_or_create to restore/overwrite existing entries
+                        Media.objects.update_or_create(
+                            number=number,
+                            defaults={
+                                'title': row.get('Title', ''),
+                                'year': int(row['Year']) if row.get('Year', '').isdigit() else None,
+                                'duration': row.get('Duration', ''),
+                                'age_rating': row.get('Age Rating', ''),
+                                'rating': float(row['Rating']) if row.get('Rating', '') and row.get('Rating', '') != '-' else None,
+                                'votes': row.get('Votes', ''),
+                                'metascore': row.get('Metascore', ''),
+                                'description': row.get('Description', ''),
+                                'watched': row.get('Watched', 'FALSE').upper() == 'TRUE',
+                                'skipped': row.get('Skipped', 'FALSE').upper() == 'TRUE',
+                                'series': row.get('Series', 'FALSE').upper() == 'TRUE',
+                                'poster_url': row.get('Poster URL', ''),
+                            }
+                        )
+                        imported_count += 1
+                    except Exception as e:
+                        error_count += 1
+                        print(f"Error importing row {row}: {str(e)}")
+            
+            msg = f"Kopia zapasowa {filename} przywrócona. Zaimportowano: {imported_count}, Błędy: {error_count}"
+            return JsonResponse({"status": "success", "message": msg})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+    return JsonResponse({"status": "error", "message": "Nieprawidłowa metoda żądania."})
 
 
 def recommend_next_watch(request):
-    """Recommend the next movie to watch."""
+    """Recommend the next movie to watch from database."""
     try:
-        # Load the CSV file
-        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-        if not os.path.exists(csv_file_path):
-            return render(request, 'pages/recommend_next_watch.html', {'error': 'CSV file not found.'})
+        # Query unwatched and not skipped movies from Media model
+        unwatched_movies = Media.objects.filter(
+            watched=False,
+            skipped=False
+        ).order_by('-number')
+        
+        if not unwatched_movies.exists():
+            return render(request, 'pages/recommend_next_watch.html', {'error': 'Brak filmów dostępnych do rekomendacji.'})
 
-        with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
-            rows = list(reader)
-
-        if len(rows) <= 1:
-            return render(request, 'pages/recommend_next_watch.html', {'error': 'No movies available for recommendation.'})
-
-        # Exclude watched or skipped movies
-        header, data = rows[0], rows[1:]
-        unwatched_movies = [row for row in data if len(row) > 9 and row[9] != 'TRUE' and row[10] != 'TRUE']
-
-        if not unwatched_movies:
-            return render(request, 'pages/recommend_next_watch.html', {'error': 'No unwatched movies available for recommendation.'})
-
-        # Find the next movie with the highest number (row[0])
-        next_movie = max(unwatched_movies, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
+        # Find the next movie (highest number / most recent)
+        next_movie = unwatched_movies.first()
 
         # Find the shortest movie
-        shortest_movie = min(unwatched_movies, key=lambda x: parse_duration(x[3]))
+        unwatched_list = list(unwatched_movies)
+        shortest_movie = min(unwatched_list, key=lambda x: parse_duration(x.duration))
 
         # Calculate total duration
-        total_duration_minutes = parse_duration(next_movie[3]) + parse_duration(shortest_movie[3])
+        total_duration_minutes = parse_duration(next_movie.duration) + parse_duration(shortest_movie.duration)
         total_hours = total_duration_minutes // 60
         total_minutes = total_duration_minutes % 60
 
         recommendations = {
             'latest': {
-                'id': next_movie[0],
-                'title': next_movie[1],
-                'year': next_movie[2],
-                'duration': next_movie[3],
-                'description': next_movie[8],
+                'id': next_movie.number,
+                'title': next_movie.title,
+                'year': next_movie.year,
+                'duration': next_movie.duration,
+                'description': next_movie.description,
             },
             'shortest': {
-                'id': shortest_movie[0],
-                'title': shortest_movie[1],
-                'year': shortest_movie[2],
-                'duration': shortest_movie[3],
-                'description': shortest_movie[8],
+                'id': shortest_movie.number,
+                'title': shortest_movie.title,
+                'year': shortest_movie.year,
+                'duration': shortest_movie.duration,
+                'description': shortest_movie.description,
             },
         }
 
@@ -461,65 +414,62 @@ def parse_duration(duration):
     return 0  # Return 0 if the format is invalid
 @csrf_exempt
 def find_next_shortest_movie(request):
+    """Find the next shortest movie to watch from database."""
     try:
         if request.method != "POST":
-            return JsonResponse({"status": "error", "message": "Invalid request method."})
+            return JsonResponse({"status": "error", "message": "Nieprawidłowa metoda żądania."})
 
-        # Load the CSV file
-        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-        if not os.path.exists(csv_file_path):
-            return JsonResponse({"status": "error", "message": "CSV file not found."})
+        # Query unwatched and not skipped movies from Media model
+        unwatched_movies = Media.objects.filter(
+            watched=False,
+            skipped=False
+        ).order_by('-number')
 
-        with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
-            rows = list(reader)
+        if not unwatched_movies.exists():
+            return JsonResponse({"status": "error", "message": "Brak filmów dostępnych."})
 
-        if len(rows) <= 1:
-            return JsonResponse({"status": "error", "message": "No movies available."})
-
-        # Exclude watched or skipped movies
-        header, data = rows[0], rows[1:]
-        unwatched_movies = [row for row in data if len(row) > 9 and row[9] != 'TRUE' and row[10] != 'TRUE']
-
-        if not unwatched_movies:
-            return JsonResponse({"status": "error", "message": "No unwatched movies available."})
-
-        # Get the currently displayed shortest movie ID from the request
-        current_shortest_id = json.loads(request.body).get("current_shortest_id")
+        # Get the currently displayed shortest movie number from the request
+        try:
+            current_shortest_id = json.loads(request.body).get("current_shortest_id")
+        except (json.JSONDecodeError, AttributeError):
+            current_shortest_id = None
 
         # Exclude the currently displayed shortest movie
         if current_shortest_id:
-            unwatched_movies = [row for row in unwatched_movies if row[0] != current_shortest_id]
+            unwatched_movies = unwatched_movies.exclude(number=current_shortest_id)
 
-        if not unwatched_movies:
-            return JsonResponse({"status": "error", "message": "No other unwatched movies available."})
+        if not unwatched_movies.exists():
+            return JsonResponse({"status": "error", "message": "Brak innych filmów dostępnych."})
 
-        # Find the next in line movie (highest ID)
-        next_in_line_movie = max(unwatched_movies, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
+        # Convert to list for processing
+        unwatched_list = list(unwatched_movies)
+        
+        # Find the next in line movie (highest number / most recent)
+        next_in_line_movie = unwatched_list[0]  # Already ordered by -number
 
         # Target duration is 4.5 hours (270 minutes)
         target_duration = 270
-        next_in_line_duration = parse_duration(next_in_line_movie[3])
+        next_in_line_duration = parse_duration(next_in_line_movie.duration)
 
         # Find the movie that, when summed with the next in line movie, is closest to 270 minutes
         best_match = min(
-            unwatched_movies,
-            key=lambda x: abs((parse_duration(x[3]) + next_in_line_duration) - target_duration)
+            unwatched_list,
+            key=lambda x: abs((parse_duration(x.duration) + next_in_line_duration) - target_duration)
         )
 
         # Calculate the total duration
-        total_minutes = parse_duration(next_in_line_movie[3]) + parse_duration(best_match[3])
+        total_minutes = parse_duration(next_in_line_movie.duration) + parse_duration(best_match.duration)
         total_hours = total_minutes // 60
         remaining_minutes = total_minutes % 60
 
         return JsonResponse({
             "status": "success",
             "movie": {
-                "id": best_match[0],
-                "title": best_match[1],
-                "year": best_match[2],
-                "duration": best_match[3],
-                "description": best_match[8],
+                "id": best_match.number,
+                "title": best_match.title,
+                "year": best_match.year,
+                "duration": best_match.duration,
+                "description": best_match.description,
             },
             "total_duration": {
                 "hours": total_hours,
@@ -887,42 +837,22 @@ def vote_page(request):
     
     filter_type = request.GET.get('filter', 'proposals')
     
-    # If filter is 'watched', show watched movies from CSV
+    # If filter is 'watched', show watched movies from database
     if filter_type == 'watched':
-        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-        watched_movies = []
+        # Query watched movies from Media model, ordered by number descending
+        watched_movies = Media.objects.filter(
+            watched=True
+        ).order_by('-number').values(
+            'number', 'title', 'year', 'duration', 'age_rating', 'rating',
+            'votes', 'metascore', 'description', 'poster_url'
+        )
         
-        if os.path.exists(csv_file_path):
-            with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                rows = list(reader)
-                
-                if len(rows) > 1:
-                    header, data = rows[0], rows[1:]
-                    # Filter for watched movies
-                    watched_data = [row for row in data if len(row) > 9 and row[9] == 'TRUE']
-                    # Sort by number descending (most recent first)
-                    watched_data = sorted(watched_data, key=lambda x: int(x[0]) if x[0].isdigit() else 0, reverse=True)
-                    
-                    # Enhance watched movies with poster data
-                    for movie in watched_data:
-                        movie_dict = {
-                            'number': movie[0] if len(movie) > 0 else '',
-                            'title': movie[1] if len(movie) > 1 else '',
-                            'year': movie[2] if len(movie) > 2 else '',
-                            'duration': movie[3] if len(movie) > 3 else '',
-                            'age_rating': movie[4] if len(movie) > 4 else '',
-                            'rating': movie[5] if len(movie) > 5 else '',
-                            'votes': movie[6] if len(movie) > 6 else '',
-                            'metascore': movie[7] if len(movie) > 7 else '',
-                            'description': movie[8] if len(movie) > 8 else '',
-                            'poster_url': movie[12] if len(movie) > 12 else '',
-                        }
-                        watched_movies.append(movie_dict)
+        # Convert to list of dicts for template compatibility
+        watched_movies_list = list(watched_movies)
         
         return render(request, 'pages/vote.html', {
             'proposals': None,
-            'watched_movies': watched_movies,
+            'watched_movies': watched_movies_list,
             'is_authenticated': request.user.is_authenticated,
             'is_admin': request.user.is_authenticated and request.user.username == 'admin',
             'filter_type': 'watched'
@@ -1081,7 +1011,7 @@ def delete_proposal(request, proposal_id):
 
 @require_POST
 def mark_watched(request, proposal_id):
-    """Admin function: mark movie from proposal as watched in CSV; if not found, add new row."""
+    """Admin function: mark movie from proposal as watched in database; if not found, create new Media entry."""
     if not request.user.is_authenticated or request.user.username != 'admin':
         return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
 
@@ -1093,87 +1023,39 @@ def mark_watched(request, proposal_id):
     title = (proposal.title or '').strip()
     title_lower = title.lower()
 
-    csv_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
-    if not os.path.exists(csv_path):
-        return JsonResponse({'status': 'error', 'message': 'Plik CSV nie istnieje.'})
-
     try:
-        with open(csv_path, 'r', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            rows = list(reader)
-
-        if not rows:
-            header = ["Number", "Title", "Year", "Duration", "Age Rating", "Rating",
-                      "Votes", "Metascore", "Description", "Watched", "Skipped",
-                      "Series", "Poster URL"]
-            data_rows = []
+        # Try to find existing media with matching title (case-insensitive)
+        media = Media.objects.filter(title__iexact=title).first()
+        
+        if media:
+            # Mark existing media as watched
+            media.watched = True
+            media.skipped = False
+            media.save()
+            # Delete proposal to free up user's slot
+            proposal.delete()
+            msg = f'Film "{title}" oznaczony jako obejrzany w bazie danych. Propozycja usunięta.'
         else:
-            header = rows[0]
-            data_rows = rows[1:]
-
-        watched_idx = 9
-        skipped_idx = 10
-
-        updated = False
-        max_number = 0
-
-        # szukaj istniejącego filmu
-        for row in data_rows:
-            if len(row) == 0:
-                continue
-
-            try:
-                num = int(row[0])
-                if num > max_number:
-                    max_number = num
-            except (ValueError, IndexError):
-                pass
-
-            if len(row) <= max(watched_idx, skipped_idx):
-                continue
-
-            row_title = (row[1] or '').strip().lower()
-
-            if row_title == title_lower:
-                row[watched_idx] = 'TRUE'
-                if len(row) > skipped_idx:
-                    row[skipped_idx] = 'FALSE'
-                updated = True
-                break
-
-        delete_proposal = False  # flaga czy usuwać propozycję
-
-        if not updated:
-            # DODAJ NOWY wiersz do CSV
+            # Create new Media entry with next available number
+            max_number = Media.objects.aggregate(
+                max_number=models.Max('number')
+            )['max_number'] or 0
+            
             new_number = max_number + 1
-            year = ''
-            description = ''
-            duration = ''
-
-            new_row = [
-                str(new_number), title, year, duration, '-', '-', '-', '-', description,
-                'TRUE', 'FALSE', 'FALSE', ''
-            ]
-            data_rows.append(new_row)
-            delete_proposal = True  # usuń propozycję po dodaniu nowego filmu
-        # else: film już istnieje w CSV - tylko zaktualizowano Watched, propozycja zostaje
-
-        # zapisz CSV
-        with open(csv_path, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-            writer.writerows(data_rows)
-
-        # usuń propozycję TYLKO gdy dodaliśmy nowy film do CSV
-        if delete_proposal:
+            
+            # Create new media entry
+            Media.objects.create(
+                number=new_number,
+                title=title,
+                watched=True,
+                skipped=False
+            )
+            # Delete proposal to free up user's slot
             proposal.delete()
-            msg = f'Film "{title}" dodany do CSV i oznaczony jako obejrzany. Usunięto z propozycji.'
-        else:
-            # Film już istnieje w CSV - też usuń propozycję żeby zwolnić slot użytkownikowi
-            proposal.delete()
-            msg = f'Film "{title}" oznaczony jako obejrzany w CSV. Propozycja usunięta.'
+            msg = f'Film "{title}" dodany do bazy danych i oznaczony jako obejrzany. Propozycja usunięta.'
+        
         log_action(request, 'movie_mark_watched', proposal_id, proposal.title, 
-           f"Updated: {updated}, Added new: {not updated}")
+           f"Marked watched, Movie found: {media is not None}")
         return JsonResponse({'status': 'success', 'message': msg})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Błąd: {str(e)}'})
@@ -1314,7 +1196,7 @@ def admin_logs(request):
 
 @csrf_exempt
 def remove_watched_movie(request):
-    """Admin: remove a movie from the watched list."""
+    """Admin: remove a movie from the watched list by marking it as unwatched."""
     if not request.user.is_authenticated or request.user.username != 'admin':
         return JsonResponse({'status': 'error', 'message': 'Brak dostępu.'})
     
@@ -1326,40 +1208,15 @@ def remove_watched_movie(request):
             if not movie_title:
                 return JsonResponse({'status': 'error', 'message': 'Brak tytułu filmu.'})
             
-            csv_file_path = os.path.join(settings.MEDIA_ROOT, 'data.csv')
+            # Find the movie by title (case-insensitive)
+            media = Media.objects.filter(title__iexact=movie_title).first()
             
-            if not os.path.exists(csv_file_path):
-                return JsonResponse({'status': 'error', 'message': 'Plik CSV nie istnieje.'})
-            
-            # Read CSV
-            with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                rows = list(reader)
-            
-            if len(rows) < 2:
-                return JsonResponse({'status': 'error', 'message': 'Plik CSV jest pusty.'})
-            
-            # Find and remove the movie by setting watched column (index 9) to FALSE
-            header = rows[0]
-            data_rows = rows[1:]
-            movie_found = False
-            
-            for row in data_rows:
-                if len(row) > 1 and row[1].strip() == movie_title.strip():
-                    # Set watched flag (column 9) to FALSE
-                    if len(row) > 9:
-                        row[9] = 'FALSE'
-                    movie_found = True
-                    break
-            
-            if not movie_found:
+            if not media:
                 return JsonResponse({'status': 'error', 'message': 'Film nie został znaleziony.'})
             
-            # Write updated CSV
-            with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(header)
-                writer.writerows(data_rows)
+            # Mark as unwatched
+            media.watched = False
+            media.save()
             
             log_action(request, 'remove_watched_movie', details=f'Usunięto film ze złożonych: {movie_title}')
             
