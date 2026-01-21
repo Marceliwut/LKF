@@ -53,6 +53,10 @@ class MovieProposal(models.Model):
     proposer = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     
+    # Cached IMDb data to avoid repeated API calls
+    cached_imdb_data = models.JSONField(null=True, blank=True)
+    cached_at = models.DateTimeField(null=True, blank=True)
+    
     class Meta:
         ordering = ['-created_at']
     

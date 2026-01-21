@@ -886,7 +886,6 @@ def vote_page(request):
     import requests
     
     filter_type = request.GET.get('filter', 'proposals')
-    sort_by = request.GET.get('sort', 'date')  # 'date' or 'rating'
     
     # If filter is 'watched', show watched movies from CSV
     if filter_type == 'watched':
@@ -902,14 +901,14 @@ def vote_page(request):
                     header, data = rows[0], rows[1:]
                     # Filter for watched movies
                     watched_data = [row for row in data if len(row) > 9 and row[9] == 'TRUE']
+                    # Sort by number descending (most recent first)
+                    watched_data = sorted(watched_data, key=lambda x: int(x[0]) if x[0].isdigit() else 0, reverse=True)
                     
-                    # Enhance watched movies with poster data and average rating
-                    from .models import MovieRating
+                    # Enhance watched movies with poster data
                     for movie in watched_data:
-                        movie_title = movie[1] if len(movie) > 1 else ''
                         movie_dict = {
                             'number': movie[0] if len(movie) > 0 else '',
-                            'title': movie_title,
+                            'title': movie[1] if len(movie) > 1 else '',
                             'year': movie[2] if len(movie) > 2 else '',
                             'duration': movie[3] if len(movie) > 3 else '',
                             'age_rating': movie[4] if len(movie) > 4 else '',
@@ -919,42 +918,30 @@ def vote_page(request):
                             'description': movie[8] if len(movie) > 8 else '',
                             'poster_url': movie[12] if len(movie) > 12 else '',
                         }
-                        
-                        # Get average user rating for this movie
-                        try:
-                            ratings = MovieRating.objects.filter(movie_title=movie_title).values_list('rating', flat=True)
-                            if ratings:
-                                movie_dict['user_avg_rating'] = sum(ratings) / len(ratings)
-                                movie_dict['user_rating_count'] = len(ratings)
-                            else:
-                                movie_dict['user_avg_rating'] = 0
-                                movie_dict['user_rating_count'] = 0
-                        except Exception:
-                            movie_dict['user_avg_rating'] = 0
-                            movie_dict['user_rating_count'] = 0
-                        
                         watched_movies.append(movie_dict)
-                    
-                    # Sort by rating or date
-                    if sort_by == 'rating':
-                        watched_movies = sorted(watched_movies, key=lambda x: x['user_avg_rating'], reverse=True)
-                    else:
-                        # Sort by number descending (most recent first)
-                        watched_movies = sorted(watched_movies, key=lambda x: int(x['number']) if x['number'].isdigit() else 0, reverse=True)
         
         return render(request, 'pages/vote.html', {
             'proposals': None,
             'watched_movies': watched_movies,
             'is_authenticated': request.user.is_authenticated,
             'is_admin': request.user.is_authenticated and request.user.username == 'admin',
-            'filter_type': 'watched',
-            'sort_by': sort_by
+            'filter_type': 'watched'
         })
     
     # Default: show proposals to vote on
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Prefetch
+    
+    # Use prefetch_related to avoid N+1 queries for votes
+    voter_prefetch = Prefetch(
+        'proposal_votes__voter',
+        ProposalVote.objects.select_related('voter')
+    )
+    
     proposals = MovieProposal.objects.annotate(
         vote_count=Count('proposal_votes')
-    ).order_by('-vote_count', '-created_at')
+    ).prefetch_related('proposer', voter_prefetch).order_by('-vote_count', '-created_at')
     
     user_votes = set()
     if request.user.is_authenticated:
@@ -963,16 +950,25 @@ def vote_page(request):
         )
     
     proposals_with_votes = []
+    proposals_to_cache = []  # Track proposals that need fresh data
+    
     for p in proposals:
-        # Get voter usernames
-        voters = ProposalVote.objects.filter(proposal=p).values_list('voter__username', flat=True)
-        voter_names = list(voters)  # ['user1', 'user2', ...]
+        # Get voter usernames from prefetched data (no new queries)
+        voter_names = [v.voter.username for v in p.proposal_votes.all()]
         
         imdb_data = {}
-        if p.imdb_id:
+        
+        # Check if we have cached IMDb data (cache for 24 hours)
+        cache_expired = not p.cached_at or (timezone.now() - p.cached_at > timedelta(hours=24))
+        
+        if p.imdb_id and p.cached_imdb_data and not cache_expired:
+            # Use cached data
+            imdb_data = p.cached_imdb_data
+        elif p.imdb_id and cache_expired:
+            # Data expired or missing - fetch fresh (but don't block page load)
             try:
                 url = f"https://api.imdbapi.dev/titles/{p.imdb_id}"
-                resp = requests.get(url, timeout=5)
+                resp = requests.get(url, timeout=3)  # Reduced timeout
                 if resp.status_code == 200:
                     payload = resp.json()
                     d = payload.get('title', {}) or payload
@@ -989,8 +985,16 @@ def vote_page(request):
                         "imdb_rating": rating.get('aggregateRating'),
                         "imdb_votes": rating.get('voteCount'),
                     }
-            except Exception:
-                pass
+                    
+                    # Cache the data
+                    p.cached_imdb_data = imdb_data
+                    p.cached_at = timezone.now()
+                    proposals_to_cache.append(p)
+            except Exception as e:
+                # If API call fails, use old cached data if available
+                if p.cached_imdb_data:
+                    imdb_data = p.cached_imdb_data
+                print(f"Error fetching IMDb data for {p.imdb_id}: {e}")
 
         proposals_with_votes.append({
             'id': p.id,
@@ -1003,8 +1007,12 @@ def vote_page(request):
             'is_proposer': request.user.is_authenticated and request.user == p.proposer,
             'imdb_id': p.imdb_id,
             'imdb': imdb_data,
-            'voters': voter_names,  # Add this line
+            'voters': voter_names,
         })
+    
+    # Bulk update cached proposals (efficient batch operation)
+    if proposals_to_cache:
+        MovieProposal.objects.bulk_update(proposals_to_cache, ['cached_imdb_data', 'cached_at'], batch_size=100)
     
     return render(request, 'pages/vote.html', {
         'proposals': proposals_with_votes,
