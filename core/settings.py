@@ -16,6 +16,19 @@ from dotenv import load_dotenv
 from str2bool import str2bool
 import dj_database_url
 
+from django.contrib.staticfiles.finders import FileSystemFinder, AppDirectoriesFinder
+
+class IgnoreScssFinder(FileSystemFinder):
+    ignore_patterns = ["*.scss"]
+
+    def list(self, ignore_patterns):
+        ignore_patterns = tuple(ignore_patterns) + tuple(self.ignore_patterns)
+        return super().list(ignore_patterns)
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "core.settings.IgnoreScssFinder",  # adjust path if needed
+]
 
 load_dotenv()  # take environment variables from .env.
 
