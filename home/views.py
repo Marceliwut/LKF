@@ -931,17 +931,10 @@ def vote_page(request):
     # Default: show proposals to vote on
     from django.utils import timezone
     from datetime import timedelta
-    from django.db.models import Prefetch
-    
-    # Use prefetch_related to avoid N+1 queries for votes
-    voter_prefetch = Prefetch(
-        'proposal_votes__voter',
-        ProposalVote.objects.select_related('voter')
-    )
     
     proposals = MovieProposal.objects.annotate(
         vote_count=Count('proposal_votes')
-    ).prefetch_related('proposer', voter_prefetch).order_by('-vote_count', '-created_at')
+    ).order_by('-vote_count', '-created_at')
     
     user_votes = set()
     if request.user.is_authenticated:
@@ -952,10 +945,23 @@ def vote_page(request):
     proposals_with_votes = []
     proposals_to_cache = []  # Track proposals that need fresh data
     
+    # Pre-fetch all voter data for all proposals at once (avoid N+1 queries)
+    # Get all votes with valid voters for all proposals
+    all_votes = ProposalVote.objects.filter(
+        proposal_id__in=[p.id for p in proposals],
+        voter__isnull=False
+    ).select_related('voter')
+    
+    # Group votes by proposal ID for quick lookup
+    votes_by_proposal = {}
+    for vote in all_votes:
+        if vote.proposal_id not in votes_by_proposal:
+            votes_by_proposal[vote.proposal_id] = []
+        votes_by_proposal[vote.proposal_id].append(vote.voter.username)
+    
     for p in proposals:
-        # Get voter usernames from prefetched data (no new queries)
-        # Filter out votes with deleted users (on_delete=CASCADE should prevent this, but handle it gracefully)
-        voter_names = [v.voter.username for v in p.proposal_votes.all() if v.voter]
+        # Get voter usernames from our pre-fetched data (no new queries)
+        voter_names = votes_by_proposal.get(p.id, [])
         
         imdb_data = {}
         
